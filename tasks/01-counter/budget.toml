@@ -1,0 +1,6 @@
+# Calibrate on first run: runner prints the reference's numbers; set each
+# limit to ~1.5x reference and freeze for v0.
+max_wasm_bytes = 1105
+# Instruction cost is measured by the runner via `stellar contract invoke
+# --cost` on `increment`; set after calibration. 0 = not enforced yet.
+max_cpu_insns = 0

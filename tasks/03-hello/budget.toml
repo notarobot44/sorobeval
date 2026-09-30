@@ -1,0 +1,3 @@
+max_wasm_bytes = 825
+max_cpu_insns = 0
+# calibrate after the reference run: ~1.5x reference size, then freeze

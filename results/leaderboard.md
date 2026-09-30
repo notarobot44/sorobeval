@@ -1,0 +1,18 @@
+# SorobEval v0 — leaderboard
+
+Tasks: 8 · samples per cell: 3 · pass = build + tests (wasm size reported, not gated in v0)
+
+| model | condition | pass rate | pass@3 | build ok | tests ok |
+|---|---|---|---|---|---|
+| claude-fable-5.1 | skill | 100% | 100% | 100% | 100% |
+| gpt-6.1-sol | bare | 100% | 100% | 100% | 100% |
+| kimi-k3 | bare | 96% | 100% | 96% | 96% |
+| muse-spark-1.3 | skill | 96% | 100% | 96% | 96% |
+| kimi-k3 | skill | 92% | 100% | 92% | 92% |
+| claude-fable-5.1 | bare | 88% | 88% | 88% | 88% |
+| muse-spark-1.3 | bare | 88% | 100% | 88% | 88% |
+| glm-5.3-flash | skill | 71% | 88% | 75% | 71% |
+| gpt-6.1-sol | skill | 71% | 75% | 71% | 71% |
+| glm-5.3-flash | bare | 50% | 75% | 71% | 50% |
+
+Toolchain: {'rustc': 'rustc 1.93.1 (01f6ddf75 2026-02-11)', 'cargo': 'cargo 1.93.1 (083ac5135 2025-12-15)', 'target': 'wasm32v1-none'}

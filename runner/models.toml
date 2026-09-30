@@ -1,0 +1,40 @@
+# Models under test — ids as listed by openrouter.ai/api/v1/models on 2026-09-29.
+# Rule: current flagship per vendor, standard tier, versioned id (no -pro, no :batch, no ~latest).
+
+[[models]]
+name = "claude-fable-5.1"
+model = "anthropic/claude-fable-5.1"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[[models]]
+name = "gpt-6.1-sol"
+model = "openai/gpt-6.1-sol"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[[models]]
+name = "muse-spark-1.3"
+model = "meta/muse-spark-1.3"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[[models]]
+name = "glm-5.3-flash"
+model = "z-ai/glm-5.3-flash"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[[models]]
+name = "kimi-k3"
+model = "moonshotai/kimi-k3"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[run]
+samples = 3
+max_tokens = 16000
+temperature = 0.2
+tasks = ["01-counter", "02-kv-store", "03-hello", "04-persistent-ttl",
+         "05-admin-gated", "06-events", "07-token-pay", "08-spending-cap"]
+conditions = ["bare", "skill"]
