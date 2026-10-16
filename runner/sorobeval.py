@@ -126,13 +126,42 @@ def load_models():
         return tomllib.load(f)
 
 
+UNCLOSED = re.compile(r"```(?:rust|rs)?[ \t]*\n(.*)", re.S)
+FENCE_LINE = re.compile(r"^[ \t]*`{3,}[a-zA-Z]*[ \t]*$", re.M)
+
+
 def extract_rust(text):
     """Pull the contract source out of a chatty reply. Extraction failure is
-    scored as a build failure, never as a runner error."""
+    scored as a build failure, never as a runner error. Tolerates a missing
+    closing fence and strips any stray fence-only lines."""
     blocks = RUST_BLOCK.findall(text) or ANY_BLOCK.findall(text)
     if blocks:
-        return max(blocks, key=len)
-    return text if "#[contract]" in text else ""
+        return FENCE_LINE.sub("", max(blocks, key=len))
+    m = UNCLOSED.search(text)
+    code = FENCE_LINE.sub("", m.group(1) if m else text)
+    return code if "#[contract]" in code else ""
+
+
+def reextract():
+    """Re-run extract_rust on the stored raw replies; drop the results of the
+    samples whose code changed so score-all rebuilds only those."""
+    changed = 0
+    for raw in sorted((ROOT / "samples").rglob("*.raw.txt")):
+        lib = raw.with_name(raw.name[:-len(".raw.txt")] + ".rs")
+        meta = lib.with_suffix(".json")
+        code = extract_rust(raw.read_text())
+        if lib.exists() and lib.read_text() == code:
+            continue
+        lib.write_text(code)
+        if meta.exists():
+            info = json.loads(meta.read_text()); info["extracted"] = bool(code)
+            meta.write_text(json.dumps(info))
+        res = ROOT / "results" / meta.relative_to(ROOT / "samples")
+        if res.exists():
+            res.unlink()
+        changed += 1
+        print(f"re-extracted {lib.relative_to(ROOT)}", file=sys.stderr)
+    print(f"{changed} samples changed; run score-all in the sandbox to rebuild them", file=sys.stderr)
 
 
 def system_prompt(condition):
@@ -209,7 +238,7 @@ def generate(only_models=None, only_tasks=None):
                           f"{' ERR ' + err if err else ''}", file=sys.stderr)
 
 
-def sample_status(info, max_tokens):
+def sample_status(info, max_tokens, raw_text=""):
     """Why a sample has no (valid) contract: ok / refused / truncated / error / no_code.
     Refusals and truncations still count as failures; they are reported separately."""
     if info.get("api_error"):
@@ -221,6 +250,8 @@ def sample_status(info, max_tokens):
         return "refused"
     if fr == "length" or (u.get("completion_tokens") or 0) >= max_tokens:
         return "truncated"
+    if raw_text.count("```") % 2 == 1:
+        return "truncated"  # reply stops inside the code block: provider-side output cap
     if not info.get("extracted"):
         return "no_code"
     return "ok"
@@ -235,7 +266,9 @@ def annotate():
         if not meta.exists():
             continue
         r = json.loads(res.read_text())
-        r["status"] = sample_status(json.loads(meta.read_text()), max_tokens)
+        raw = meta.with_name(meta.stem + ".raw.txt")
+        r["status"] = sample_status(json.loads(meta.read_text()), max_tokens,
+                                    raw.read_text() if raw.exists() else "")
         res.write_text(json.dumps(r)); n += 1
     print(f"annotated {n} results", file=sys.stderr)
 
@@ -257,7 +290,8 @@ def score_all():
                  "wasm_bytes": None, "build_log_tail": "extraction failed",
                  "test_log_tail": "", "toolchain": {}}
         r.update({k: info[k] for k in ("model", "model_id", "condition", "sample", "skill_sha256", "usage", "seconds")})
-        r["status"] = sample_status(info, max_tokens)
+        raw = meta.with_name(meta.stem + ".raw.txt")
+        r["status"] = sample_status(info, max_tokens, raw.read_text() if raw.exists() else "")
         res.parent.mkdir(parents=True, exist_ok=True)
         res.write_text(json.dumps(r))
         print(f"{info['task']} {info['model']} {info['condition']} #{info['sample']}: "
@@ -295,7 +329,7 @@ def leaderboard():
     print("\n".join(out))
 
 
-if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard", "annotate"):
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard", "annotate", "reextract"):
     cmd = sys.argv[1]
     if cmd == "generate":
         generate(only_models=sys.argv[2].split(",") if len(sys.argv) > 2 else None,
@@ -304,6 +338,8 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", 
         score_all()
     elif cmd == "annotate":
         annotate()
+    elif cmd == "reextract":
+        reextract()
     else:
         leaderboard()
     sys.exit(0)

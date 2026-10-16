@@ -1,4 +1,3 @@
-```rust
 #![no_std]
 use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
 
