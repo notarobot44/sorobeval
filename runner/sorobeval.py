@@ -175,15 +175,20 @@ def system_prompt(condition):
     return base + "\n\n# Reference material\n\n" + s, hashlib.sha256(s.encode()).hexdigest()
 
 
-def chat(model_cfg, system, user, max_tokens, temperature):
+def chat(model_cfg, system, user, max_tokens, temperature, reasoning_tokens=None):
     url = model_cfg["base_url"].rstrip("/") + "/chat/completions"
     key = os.environ.get(model_cfg.get("api_key_env") or "", "")
-    body = json.dumps({
+    req = {
         "model": model_cfg["model"], "max_tokens": max_tokens,
         "temperature": temperature,
         "messages": [{"role": "system", "content": system},
                      {"role": "user", "content": user}],
-    }).encode()
+        # OpenRouter: route only to providers that honour every parameter sent
+        "provider": dict(model_cfg.get("provider", {}), require_parameters=True),
+    }
+    if reasoning_tokens:
+        req["reasoning"] = {"max_tokens": reasoning_tokens}  # budget separate from output
+    body = json.dumps(req).encode()
     headers = {"Content-Type": "application/json",
                "HTTP-Referer": "https://sorob.ai", "X-Title": "SorobEval"}
     if key:
@@ -193,15 +198,38 @@ def chat(model_cfg, system, user, max_tokens, temperature):
             req = urllib.request.Request(url, data=body, headers=headers)
             with urllib.request.urlopen(req, timeout=300) as r:
                 data = json.load(r)
-            text = data["choices"][0]["message"]["content"] or ""
-            usage = data.get("usage", {})
+            choice = data["choices"][0]
+            text = choice["message"]["content"] or ""
+            usage = dict(data.get("usage", {}), provider=data.get("provider"),
+                         finish_reason=choice.get("finish_reason"),
+                         native_finish_reason=choice.get("native_finish_reason"))
             if not text:
-                usage = dict(usage, raw_response=data)
+                usage["raw_response"] = data
             return text, usage, None
         except Exception as e:
             err = str(e)
             time.sleep(2 ** attempt)
     return "", {}, err
+
+
+def endpoints():
+    """Print each model's OpenRouter providers with their output-token caps (public API)."""
+    for m in load_models()["models"]:
+        url = m["base_url"].rstrip("/") + "/models/" + m["model"] + "/endpoints"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url), timeout=60) as r:
+                data = json.load(r)
+        except Exception as e:
+            print(f"== {m['name']}: {e}"); continue
+        eps = (data.get("data") or {}).get("endpoints") or []
+        print(f"== {m['name']} ({m['model']})")
+        if not eps:
+            print("   " + json.dumps(data)[:600]); continue
+        for ep in eps:
+            sp = ep.get("supported_parameters") or []
+            print(f"   {str(ep.get('provider_name') or ep.get('name')):20} slug={ep.get('tag')}"
+                  f" quant={ep.get('quantization')}"
+                  f" max_tokens={'max_tokens' in sp} reasoning={'reasoning' in sp}")
 
 
 def generate(only_models=None, only_tasks=None):
@@ -224,7 +252,8 @@ def generate(only_models=None, only_tasks=None):
                     if meta.exists():
                         continue  # resumable
                     t0 = time.time()
-                    text, usage, err = chat(m, system, spec, run["max_tokens"], run["temperature"])
+                    text, usage, err = chat(m, system, spec, run["max_tokens"], run["temperature"],
+                                            run.get("reasoning_tokens"))
                     code = extract_rust(text)
                     lib.write_text(code)
                     (out / f"{i}.raw.txt").write_text(text)
@@ -245,7 +274,8 @@ def sample_status(info, max_tokens, raw_text=""):
         return "error"
     u = info.get("usage") or {}
     ch = ((u.get("raw_response") or {}).get("choices") or [{}])[0]
-    fr, nat = ch.get("finish_reason"), ch.get("native_finish_reason")
+    fr = ch.get("finish_reason") or u.get("finish_reason")
+    nat = ch.get("native_finish_reason") or u.get("native_finish_reason")
     if fr == "content_filter" or nat == "refusal" or (ch.get("message") or {}).get("refusal"):
         return "refused"
     if fr == "length" or (u.get("completion_tokens") or 0) >= max_tokens:
@@ -329,7 +359,7 @@ def leaderboard():
     print("\n".join(out))
 
 
-if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard", "annotate", "reextract"):
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard", "annotate", "reextract", "endpoints"):
     cmd = sys.argv[1]
     if cmd == "generate":
         generate(only_models=sys.argv[2].split(",") if len(sys.argv) > 2 else None,
@@ -340,6 +370,8 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", 
         annotate()
     elif cmd == "reextract":
         reextract()
+    elif cmd == "endpoints":
+        endpoints()
     else:
         leaderboard()
     sys.exit(0)
