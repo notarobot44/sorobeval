@@ -209,8 +209,40 @@ def generate(only_models=None, only_tasks=None):
                           f"{' ERR ' + err if err else ''}", file=sys.stderr)
 
 
+def sample_status(info, max_tokens):
+    """Why a sample has no (valid) contract: ok / refused / truncated / error / no_code.
+    Refusals and truncations still count as failures; they are reported separately."""
+    if info.get("api_error"):
+        return "error"
+    u = info.get("usage") or {}
+    ch = ((u.get("raw_response") or {}).get("choices") or [{}])[0]
+    fr, nat = ch.get("finish_reason"), ch.get("native_finish_reason")
+    if fr == "content_filter" or nat == "refusal" or (ch.get("message") or {}).get("refusal"):
+        return "refused"
+    if fr == "length" or (u.get("completion_tokens") or 0) >= max_tokens:
+        return "truncated"
+    if not info.get("extracted"):
+        return "no_code"
+    return "ok"
+
+
+def annotate():
+    """Stamp the status field onto existing results without rebuilding anything."""
+    max_tokens = load_models()["run"]["max_tokens"]
+    n = 0
+    for res in sorted((ROOT / "results").rglob("*.json")):
+        meta = ROOT / "samples" / res.relative_to(ROOT / "results")
+        if not meta.exists():
+            continue
+        r = json.loads(res.read_text())
+        r["status"] = sample_status(json.loads(meta.read_text()), max_tokens)
+        res.write_text(json.dumps(r)); n += 1
+    print(f"annotated {n} results", file=sys.stderr)
+
+
 def score_all():
     """SANDBOX side: score every generated sample into results/<task>/..."""
+    max_tokens = load_models()["run"]["max_tokens"]
     for meta in sorted((ROOT / "samples").rglob("*.json")):
         lib = meta.with_suffix(".rs")
         res = ROOT / "results" / meta.relative_to(ROOT / "samples")
@@ -225,6 +257,7 @@ def score_all():
                  "wasm_bytes": None, "build_log_tail": "extraction failed",
                  "test_log_tail": "", "toolchain": {}}
         r.update({k: info[k] for k in ("model", "model_id", "condition", "sample", "skill_sha256", "usage", "seconds")})
+        r["status"] = sample_status(info, max_tokens)
         res.parent.mkdir(parents=True, exist_ok=True)
         res.write_text(json.dumps(r))
         print(f"{info['task']} {info['model']} {info['condition']} #{info['sample']}: "
@@ -240,31 +273,37 @@ def leaderboard():
     agg = {}
     for r in rows:
         k = (r["model"], r["condition"])
-        a = agg.setdefault(k, {"pass": 0, "total": 0, "any": {}, "build": 0, "tests": 0})
+        a = agg.setdefault(k, {"pass": 0, "total": 0, "any": {}, "build": 0, "tests": 0, "refused": 0, "truncated": 0, "nocode": 0})
         a["total"] += 1; a["pass"] += (r["gates"]["build"] and r["gates"]["tests"])
         a["build"] += r["gates"]["build"]; a["tests"] += r["gates"]["tests"]
+        st = r.get("status", "ok")
+        if st == "refused": a["refused"] += 1
+        elif st == "truncated": a["truncated"] += 1
+        elif st in ("error", "no_code"): a["nocode"] += 1
         a["any"][r["task"]] = a["any"].get(r["task"], False) or (r["gates"]["build"] and r["gates"]["tests"])
     out = ["# SorobEval v0 — leaderboard", "",
-           f"Tasks: {len(tasks)} · samples per cell: {n} · pass = build + tests (wasm size reported, not gated in v0)", "",
-           "| model | condition | pass rate | pass@%d | build ok | tests ok |" % n,
-           "|---|---|---|---|---|---|"]
+           f"Tasks: {len(tasks)} · samples per cell: {n} · pass = build + tests; refused / truncated / no-code samples count as failures and are listed separately (wasm size reported, not gated in v0)", "",
+           "| model | condition | pass rate | pass@%d | build ok | tests ok | refused | truncated | no code |" % n,
+           "|---|---|---|---|---|---|---|---|---|"]
     for (m, c), a in sorted(agg.items(), key=lambda kv: -kv[1]["pass"] / max(kv[1]["total"], 1)):
         pr = a["pass"] / a["total"]
         pk = sum(a["any"].values()) / len(tasks)
-        out.append(f"| {m} | {c} | {pr:.0%} | {pk:.0%} | {a['build']/a['total']:.0%} | {a['tests']/a['total']:.0%} |")
+        out.append(f"| {m} | {c} | {pr:.0%} | {pk:.0%} | {a['build']/a['total']:.0%} | {a['tests']/a['total']:.0%} | {a['refused']} | {a['truncated']} | {a['nocode']} |")
     tc = next((r["toolchain"] for r in rows if r.get("toolchain")), {})
     out += ["", f"Toolchain: {tc}", ""]
     (ROOT / "results" / "leaderboard.md").write_text("\n".join(out))
     print("\n".join(out))
 
 
-if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard"):
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] in ("generate", "score-all", "leaderboard", "annotate"):
     cmd = sys.argv[1]
     if cmd == "generate":
         generate(only_models=sys.argv[2].split(",") if len(sys.argv) > 2 else None,
                  only_tasks=sys.argv[3].split(",") if len(sys.argv) > 3 else None)
     elif cmd == "score-all":
         score_all()
+    elif cmd == "annotate":
+        annotate()
     else:
         leaderboard()
     sys.exit(0)
