@@ -13,6 +13,8 @@ Tasks: 8 · samples per cell: 3 · pass = build + tests; refused / truncated / n
 | muse-spark-1.3 | bare | 88% | 100% | 88% | 88% | 0 | 3 | 0 |
 | glm-5.3-flash | skill | 71% | 88% | 75% | 71% | 0 | 4 | 0 |
 | gpt-6.1-sol | skill | 71% | 75% | 71% | 71% | 0 | 0 | 0 |
+| qwen3-coder-30b-local | skill | 62% | 75% | 75% | 62% | 0 | 0 | 0 |
 | glm-5.3-flash | bare | 50% | 75% | 71% | 50% | 0 | 5 | 0 |
+| qwen3-coder-30b-local | bare | 0% | 0% | 0% | 0% | 0 | 0 | 0 |
 
 Toolchain: {'rustc': 'rustc 1.93.1 (01f6ddf75 2026-02-11)', 'cargo': 'cargo 1.93.1 (083ac5135 2025-12-15)', 'target': 'wasm32v1-none'}

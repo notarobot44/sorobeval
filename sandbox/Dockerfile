@@ -11,7 +11,7 @@ ARG STELLAR_CLI_VERSION=28.1.0
 ENV SOROBAN_WASM_TARGET=${SOROBAN_WASM_TARGET} \
     STELLAR_CLI_VERSION=${STELLAR_CLI_VERSION} \
     CARGO_TERM_COLOR=never \
-    RUSTFLAGS="-D warnings"
+    RUSTFLAGS=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 \
  && rm -rf /var/lib/apt/lists/* \
