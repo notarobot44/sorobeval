@@ -72,10 +72,11 @@ Also visible: T5 and T7/T8 are where models separate; T1–T3 are solved by ever
 ## Notes on method and its limits
 
 - **n = 3 per cell.** Differences under ~10 points are not meaningful. This is a v0 to establish the pipeline and the task set, not a ranking to be quoted to the decimal.
-- **One toolchain.** All samples are built with the pinned versions above and `-D warnings`, so a deprecated API (e.g. the old `env.events().publish`) fails the build. That is intentional: the benchmark measures current-SDK Soroban.
+- **One toolchain.** All samples are built with the pinned versions above. The first scoring pass used `-D warnings`; it was dropped on 17 Oct 2026 because it failed samples on warnings unrelated to SDK correctness, and every row was re-scored without it on 21 Oct — no score changed. Removed APIs (e.g. the old `env.events().publish` signature) still fail the build; the benchmark measures current-SDK Soroban.
+- **Local rows.** `qwen3-coder-30b-local` (Q3_K_L) and `devstral-small-2-local` (Q4_K_M) ran in LM Studio on a laptop (Intel Arc, Vulkan runtime), 32k context, `max_tokens` 6000, with the runner's request timeout raised to 3600 s. The runner sends no temperature, so each local model ran at its LM Studio preset; Devstral's is 0.15 and its three samples per cell came out byte-identical, so its pass@3 equals its pass rate.
 - **Wasm-size budget not gated in v0.** The 1.5× reference budgets were calibrated on hand-minimised references; on T5 every correct sample landed 5–10% over. Sizes are recorded in every result and will be gated once budgets are recalibrated on a larger sample.
 - **Harness fixes made before the final table:** output budget raised to 16,000; 19 samples that had returned empty due to transient network errors or output truncation were regenerated; refusals are detected from the API response rather than counted as "no code".
-- **Author disclosure.** The benchmark was built with the assistance of Claude, and Claude Fable 5.1 is one of the five models tested. All gates are mechanical (compile, test), the tasks, references, prompts and raw samples are published, and anyone can rerun the matrix; that, rather than trust, is the answer to the conflict.
+- **Author disclosure.** The benchmark was built with the assistance of Claude, and Claude Fable 5.1 is one of the models tested. All gates are mechanical (compile, test), the tasks, references, prompts and raw samples are published, and anyone can rerun the matrix; that, rather than trust, is the answer to the conflict.
 
 ## Reproduce
 
