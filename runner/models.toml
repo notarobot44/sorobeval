@@ -50,6 +50,13 @@ base_url = "http://localhost:1234/v1"   # LM Studio on the Windows host (WSL2 mi
 max_tokens = 6000                        # local rows: 32k context minus the 24k skill prompt
 # local: no provider pin, no reasoning budget, no API key
 
+[[models]]
+name = "gpt-oss-20b-local"
+model = "openai/gpt-oss-20b"
+base_url = "http://localhost:1234/v1"   # LM Studio on the Windows host (WSL2 mirrored networking)
+max_tokens = 6000                        # local rows: 32k context minus the 24k skill prompt
+# local: no provider pin, no reasoning budget, no API key; reasoning effort left at low (LM Studio preset)
+
 [run]
 samples = 3
 max_tokens = 16000
