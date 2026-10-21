@@ -180,14 +180,15 @@ def chat(model_cfg, system, user, max_tokens, temperature, reasoning_tokens=None
     key = os.environ.get(model_cfg.get("api_key_env") or "", "")
     req = {
         "model": model_cfg["model"], "max_tokens": max_tokens,
-        "temperature": temperature,
         "messages": [{"role": "system", "content": system},
                      {"role": "user", "content": user}],
-        # OpenRouter: route only to providers that honour every parameter sent
-        "provider": dict(model_cfg.get("provider", {}), require_parameters=True),
     }
-    if reasoning_tokens:
-        req["reasoning"] = {"max_tokens": reasoning_tokens}  # budget separate from output
+    if temperature is not None:
+        req["temperature"] = temperature
+    if "openrouter" in url:  # OpenRouter-only fields; a local server would reject or ignore them
+        req["provider"] = dict(model_cfg.get("provider", {}), require_parameters=True)
+        if reasoning_tokens:
+            req["reasoning"] = {"max_tokens": reasoning_tokens}  # budget separate from output
     body = json.dumps(req).encode()
     headers = {"Content-Type": "application/json",
                "HTTP-Referer": "https://sorob.ai", "X-Title": "SorobEval"}
@@ -196,7 +197,7 @@ def chat(model_cfg, system, user, max_tokens, temperature, reasoning_tokens=None
     for attempt in range(4):
         try:
             req = urllib.request.Request(url, data=body, headers=headers)
-            with urllib.request.urlopen(req, timeout=300) as r:
+            with urllib.request.urlopen(req, timeout=3600) as r:
                 data = json.load(r)
             choice = data["choices"][0]
             text = choice["message"]["content"] or ""
@@ -206,6 +207,11 @@ def chat(model_cfg, system, user, max_tokens, temperature, reasoning_tokens=None
             if not text:
                 usage["raw_response"] = data
             return text, usage, None
+        except urllib.error.HTTPError as e:
+            err = f"HTTP {e.code}: {e.read().decode(errors='replace')[:400]}"
+            if 400 <= e.code < 500 and e.code != 429:
+                break  # not transient: retrying won't help
+            time.sleep(2 ** attempt)
         except Exception as e:
             err = str(e)
             time.sleep(2 ** attempt)
@@ -252,7 +258,7 @@ def generate(only_models=None, only_tasks=None):
                     if meta.exists():
                         continue  # resumable
                     t0 = time.time()
-                    text, usage, err = chat(m, system, spec, run["max_tokens"], run["temperature"],
+                    text, usage, err = chat(m, system, spec, m.get("max_tokens", run["max_tokens"]), run.get("temperature"),
                                             run.get("reasoning_tokens"))
                     code = extract_rust(text)
                     lib.write_text(code)

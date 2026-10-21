@@ -36,11 +36,25 @@ base_url = "https://openrouter.ai/api/v1"
 api_key_env = "OPENROUTER_API_KEY"
 provider = { order = ["moonshotai/mxfp4"], allow_fallbacks = false }  # v0.1: vendor endpoint only
 
+[[models]]
+name = "qwen3-coder-30b-local"
+model = "qwen/qwen3-coder-30b"
+base_url = "http://localhost:1234/v1"   # LM Studio on the Windows host (WSL2 mirrored networking)
+max_tokens = 6000                        # local rows: 32k context minus the 24k skill prompt
+# local: no provider pin, no reasoning budget, no API key
+
+[[models]]
+name = "devstral-small-2-local"
+model = "mistralai/devstral-small-2-2512"
+base_url = "http://localhost:1234/v1"   # LM Studio on the Windows host (WSL2 mirrored networking)
+max_tokens = 6000                        # local rows: 32k context minus the 24k skill prompt
+# local: no provider pin, no reasoning budget, no API key
+
 [run]
 samples = 3
 max_tokens = 16000
 reasoning_tokens = 8000   # v0.1: reasoning budget, separate from output
-temperature = 0.2
+# temperature = 0.2   # v0 only; v0.1 runs at vendor defaults (reasoning endpoints reject it)
 tasks = ["01-counter", "02-kv-store", "03-hello", "04-persistent-ttl",
          "05-admin-gated", "06-events", "07-token-pay", "08-spending-cap"]
 conditions = ["bare", "skill"]
