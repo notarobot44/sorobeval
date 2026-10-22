@@ -7,23 +7,16 @@ pub struct Counter;
 #[contractimpl]
 impl Counter {
     pub fn increment(env: Env) -> u32 {
-        let mut count: u32 = env
-            .storage()
-            .instance()
-            .get(&symbol_short!("count"))
-            .unwrap_or(0);
-        count += 1;
-        env.storage()
-            .instance()
-            .set(&symbol_short!("count"), &count);
+        let key = symbol_short!("COUNTER");
+        let count: u32 = env.storage().instance().get(&key).unwrap_or(0);
+        let new_count = count + 1;
+        env.storage().instance().set(&key, &new_count);
         env.storage().instance().extend_ttl(50, 100);
-        count
+        new_count
     }
 
     pub fn get(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&symbol_short!("count"))
-            .unwrap_or(0)
+        let key = symbol_short!("COUNTER");
+        env.storage().instance().get(&key).unwrap_or(0)
     }
 }

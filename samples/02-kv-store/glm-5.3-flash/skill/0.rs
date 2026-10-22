@@ -6,18 +6,15 @@ pub struct Store;
 
 #[contractimpl]
 impl Store {
-    /// Stores `value` under `key` in instance storage.
     pub fn set(env: Env, key: Symbol, value: i128) {
         env.storage().instance().set(&key, &value);
+        env.storage().instance().extend_ttl(30 * 17280, 120 * 17280);
     }
 
-    /// Returns the stored value, or `None` if the key was never set
-    /// (or has been removed).
     pub fn get(env: Env, key: Symbol) -> Option<i128> {
         env.storage().instance().get(&key)
     }
 
-    /// Deletes the key; `get` returns `None` afterwards.
     pub fn remove(env: Env, key: Symbol) {
         env.storage().instance().remove(&key);
     }

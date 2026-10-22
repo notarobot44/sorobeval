@@ -2,9 +2,6 @@
 
 use soroban_sdk::{contract, contracterror, contractimpl, symbol_short, Address, Env, Symbol};
 
-const ADMIN: Symbol = symbol_short!("ADMIN");
-const VALUE: Symbol = symbol_short!("VALUE");
-
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
@@ -12,6 +9,9 @@ pub enum Error {
     AlreadyInitialized = 1,
     NotInitialized = 2,
 }
+
+const ADMIN: Symbol = symbol_short!("ADMIN");
+const VALUE: Symbol = symbol_short!("VALUE");
 
 #[contract]
 pub struct Gated;

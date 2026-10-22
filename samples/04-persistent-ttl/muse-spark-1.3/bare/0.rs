@@ -12,7 +12,7 @@ impl Persist {
     }
 
     pub fn fetch(env: Env, key: u32) -> Option<Bytes> {
-        env.storage().persistent().get(&key)
+        env.storage().persistent().get::<u32, Bytes>(&key)
     }
 
     pub fn bump(env: Env, key: u32) {

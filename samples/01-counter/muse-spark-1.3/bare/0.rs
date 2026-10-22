@@ -10,12 +10,12 @@ impl Counter {
         let mut count: u32 = env
             .storage()
             .instance()
-            .get(&symbol_short!("COUNT"))
+            .get(&symbol_short!("count"))
             .unwrap_or(0);
         count += 1;
         env.storage()
             .instance()
-            .set(&symbol_short!("COUNT"), &count);
+            .set(&symbol_short!("count"), &count);
         env.storage().instance().extend_ttl(50, 100);
         count
     }
@@ -23,7 +23,7 @@ impl Counter {
     pub fn get(env: Env) -> u32 {
         env.storage()
             .instance()
-            .get(&symbol_short!("COUNT"))
+            .get(&symbol_short!("count"))
             .unwrap_or(0)
     }
 }

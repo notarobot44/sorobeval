@@ -3,7 +3,7 @@
 use soroban_sdk::{contract, contracterror, contractimpl, token, Address, Env};
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum Error {
     InvalidAmount = 1,

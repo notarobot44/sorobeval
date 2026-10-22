@@ -18,11 +18,12 @@ impl Recorder {
             .storage()
             .instance()
             .get(&symbol_short!("count"))
-            .unwrap_or(0);
-        let count = count + 1;
+            .unwrap_or(0)
+            + 1;
 
         env.storage().instance().set(&symbol_short!("count"), &count);
         env.storage().instance().set(&symbol_short!("last"), &value);
+        env.storage().instance().extend_ttl(120 * 17280, 180 * 17280);
 
         Record { count, value }.publish(&env);
 

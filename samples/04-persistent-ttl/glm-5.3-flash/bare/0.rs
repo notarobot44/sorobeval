@@ -1,36 +1,38 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, Bytes, Env};
+use soroban_sdk::{contract, contractimpl, symbol_short, Bytes, Env, Symbol};
+
+const LEDGER_THRESHOLD: u32 = 1_000;
+const LEDGER_EXTEND: u32 = 5_000;
 
 #[contract]
 pub struct Persist;
 
-const TTL_THRESHOLD: u32 = 1_000;
-const TTL_EXTEND_TO: u32 = 5_000;
+const KEY_PREFIX: Symbol = symbol_short!("persist");
+
+fn storage_key(env: &Env, key: u32) -> (Symbol, u32) {
+    (KEY_PREFIX, key)
+}
 
 #[contractimpl]
 impl Persist {
-    /// Stores `value` under `key` in persistent storage and extends the
-    /// entry's TTL so that it lives at least 5,000 ledgers from now.
     pub fn put(env: Env, key: u32, value: Bytes) {
-        env.storage().persistent().set(&key, &value);
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+        let sk = storage_key(&env, key);
+        let storage = env.storage().persistent();
+        storage.set(&sk, &value);
+        storage.extend_ttl(&sk, LEDGER_THRESHOLD, LEDGER_EXTEND);
     }
 
-    /// Returns the value stored under `key`, or `None` if absent.
     pub fn fetch(env: Env, key: u32) -> Option<Bytes> {
-        env.storage().persistent().get(&key)
+        let sk = storage_key(&env, key);
+        env.storage().persistent().get(&sk)
     }
 
-    /// Extends the TTL of an existing entry; does nothing if the key
-    /// does not exist.
     pub fn bump(env: Env, key: u32) {
-        if env.storage().persistent().has(&key) {
-            env.storage()
-                .persistent()
-                .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+        let sk = storage_key(&env, key);
+        let storage = env.storage().persistent();
+        if storage.has(&sk) {
+            storage.extend_ttl(&sk, LEDGER_THRESHOLD, LEDGER_EXTEND);
         }
     }
 }

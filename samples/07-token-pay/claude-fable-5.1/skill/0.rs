@@ -13,13 +13,7 @@ pub struct Payer;
 
 #[contractimpl]
 impl Payer {
-    pub fn pay(
-        env: Env,
-        from: Address,
-        to: Address,
-        token: Address,
-        amount: i128,
-    ) -> Result<(), Error> {
+    pub fn pay(env: Env, from: Address, to: Address, token: Address, amount: i128) -> Result<(), Error> {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }

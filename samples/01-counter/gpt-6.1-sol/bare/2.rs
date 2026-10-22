@@ -2,8 +2,8 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
 
-const COUNTER_KEY: Symbol = symbol_short!("COUNTER");
-const TTL_THRESHOLD: u32 = 10_000;
+const COUNTER_KEY: Symbol = symbol_short!("count");
+const TTL_THRESHOLD: u32 = 50_000;
 const TTL_EXTEND_TO: u32 = 100_000;
 
 #[contract]

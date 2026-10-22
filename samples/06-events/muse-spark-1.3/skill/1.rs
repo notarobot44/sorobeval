@@ -18,8 +18,8 @@ impl Recorder {
             .storage()
             .instance()
             .get(&symbol_short!("count"))
-            .unwrap_or(0u32)
-            + 1;
+            .unwrap_or(0);
+        let count = count + 1;
         env.storage()
             .instance()
             .set(&symbol_short!("count"), &count);

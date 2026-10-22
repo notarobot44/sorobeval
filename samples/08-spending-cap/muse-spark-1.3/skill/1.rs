@@ -1,6 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
-use soroban_sdk::token::Client as TokenClient;
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, panic_with_error, token::Client, Address, Env};
 
 #[contracttype]
 #[derive(Clone)]
@@ -9,7 +8,7 @@ pub enum DataKey {
     Token,
     Cap,
     Spent,
-    Whitelist(Address),
+    Whitelisted(Address),
 }
 
 #[contracterror]
@@ -26,10 +25,6 @@ pub enum Error {
 #[contract]
 pub struct Treasury;
 
-const DAY_IN_LEDGERS: u32 = 17280;
-const BUMP_THRESHOLD: u32 = 30 * DAY_IN_LEDGERS;
-const BUMP_TO: u32 = 120 * DAY_IN_LEDGERS;
-
 #[contractimpl]
 impl Treasury {
     pub fn init(env: Env, admin: Address, token: Address, cap: i128) -> Result<(), Error> {
@@ -44,7 +39,6 @@ impl Treasury {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
-        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
         Ok(())
     }
 
@@ -56,14 +50,8 @@ impl Treasury {
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
         env.storage()
-            .persistent()
-            .set(&DataKey::Whitelist(recipient.clone()), &true);
-        env.storage().persistent().extend_ttl(
-            &DataKey::Whitelist(recipient),
-            BUMP_THRESHOLD,
-            BUMP_TO,
-        );
-        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
+            .instance()
+            .set(&DataKey::Whitelisted(recipient), &true);
         Ok(())
     }
 
@@ -73,36 +61,47 @@ impl Treasury {
             .instance()
             .get(&DataKey::Admin)
             .ok_or(Error::NotInitialized)?;
-        admin.require_auth();
-        if amount <= 0 {
-            return Err(Error::InvalidAmount);
-        }
-        let whitelisted: bool = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Whitelist(to.clone()))
-            .unwrap_or(false);
-        if !whitelisted {
-            return Err(Error::NotWhitelisted);
-        }
-        let cap: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::Cap)
-            .ok_or(Error::NotInitialized)?;
         let token: Address = env
             .storage()
             .instance()
             .get(&DataKey::Token)
             .ok_or(Error::NotInitialized)?;
+        let cap: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
+        let is_whitelisted: bool = env
+            .storage()
+            .instance()
+            .get(&DataKey::Whitelisted(to.clone()))
+            .unwrap_or(false);
+        if !is_whitelisted {
+            return Err(Error::NotWhitelisted);
+        }
         let spent: i128 = env.storage().instance().get(&DataKey::Spent).unwrap_or(0);
         let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
         if new_spent > cap {
             return Err(Error::CapExceeded);
         }
         let self_addr = env.current_contract_address();
-        TokenClient::new(&env, &token).transfer(&self_addr, &to, &amount);
+        Client::new(&env, &token).transfer(&self_addr, &to, &amount);
         env.storage().instance().set(&DataKey::Spent, &new_spent);
-        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
-        env.storage().persistent().extend_ttl(
-            &DataKey
+        Ok(())
+    }
+
+    pub fn spent(env: Env) -> i128 {
+        env.storage().instance().get(&DataKey::Spent).unwrap_or(0)
+    }
+
+    pub fn cap(env: Env) -> i128 {
+        match env.storage().instance().get(&DataKey::Cap) {
+            Some(c) => c,
+            None => panic_with_error!(&env, Error::NotInitialized),
+        }
+    }
+}

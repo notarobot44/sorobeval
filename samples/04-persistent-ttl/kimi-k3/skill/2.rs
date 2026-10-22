@@ -1,8 +1,8 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, Bytes, Env};
 
-const TTL_THRESHOLD: u32 = 1_000;
-const TTL_EXTEND_TO: u32 = 5_000;
+const BUMP_THRESHOLD: u32 = 1_000;
+const BUMP_TO: u32 = 5_000;
 
 #[contract]
 pub struct Persist;
@@ -13,7 +13,7 @@ impl Persist {
         env.storage().persistent().set(&key, &value);
         env.storage()
             .persistent()
-            .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+            .extend_ttl(&key, BUMP_THRESHOLD, BUMP_TO);
     }
 
     pub fn fetch(env: Env, key: u32) -> Option<Bytes> {
@@ -24,7 +24,7 @@ impl Persist {
         if env.storage().persistent().has(&key) {
             env.storage()
                 .persistent()
-                .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+                .extend_ttl(&key, BUMP_THRESHOLD, BUMP_TO);
         }
     }
 }

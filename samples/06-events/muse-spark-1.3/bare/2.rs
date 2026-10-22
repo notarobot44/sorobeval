@@ -1,21 +1,31 @@
 #![no_std]
-use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
+use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env, Symbol};
 
-#[contract]
-pub struct Recorder;
+const COUNT: Symbol = symbol_short!("count");
+const LAST: Symbol = symbol_short!("last");
 
-#[contractevent(topics = ["record"])]
+#[contractevent(data_format = "single-value")]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Record {
     #[topic]
     pub count: u32,
     pub value: u32,
 }
 
+#[contract]
+pub struct Recorder;
+
 #[contractimpl]
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
-        let count_key = symbol_short!("count");
-        let last_key = symbol_short!("last");
-        let count: u32 = env.storage().instance().get(&count_key).unwrap_or(0);
-        let count = count + 1;
-        env.storage().instance().set(&
+        let count: u32 = env.storage().instance().get(&COUNT).unwrap_or(0) + 1;
+        env.storage().instance().set(&COUNT, &count);
+        env.storage().instance().set(&LAST, &value);
+        Record { count, value }.publish(&env);
+        count
+    }
+
+    pub fn last(env: Env) -> Option<u32> {
+        env.storage().instance().get(&LAST)
+    }
+}

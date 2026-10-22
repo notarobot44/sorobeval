@@ -2,9 +2,9 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
 
-const COUNTER_KEY: Symbol = symbol_short!("counter");
-const TTL_THRESHOLD: u32 = 17_280;
-const TTL_EXTEND_TO: u32 = 518_400;
+const COUNTER_KEY: Symbol = symbol_short!("count");
+const TTL_THRESHOLD: u32 = 100;
+const TTL_EXTEND_TO: u32 = 1_000;
 
 #[contract]
 pub struct Counter;

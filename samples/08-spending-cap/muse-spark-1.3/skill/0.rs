@@ -1,16 +1,6 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, panic_with_error, Address, Env};
-use soroban_sdk::token::Client;
-
-#[contracttype]
-#[derive(Clone)]
-pub enum DataKey {
-    Admin,
-    Token,
-    Cap,
-    Spent,
-    Whitelisted(Address),
-}
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, panic_with_error};
+use soroban_sdk::token::Client as TokenClientAlias;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -21,6 +11,16 @@ pub enum Error {
     NotWhitelisted = 3,
     CapExceeded = 4,
     NotInitialized = 5,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    Admin,
+    Token,
+    Cap,
+    Spent,
+    Whitelisted(Address),
 }
 
 #[contract]
@@ -40,7 +40,7 @@ impl Treasury {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
-        env.storage().instance().extend_ttl(1728000, 3110400);
+        env.storage().instance().extend_ttl(518400, 3110400);
         Ok(())
     }
 
@@ -54,7 +54,7 @@ impl Treasury {
         env.storage()
             .persistent()
             .set(&DataKey::Whitelisted(recipient), &true);
-        env.storage().instance().extend_ttl(1728000, 3110400);
+        env.storage().instance().extend_ttl(518400, 3110400);
         Ok(())
     }
 
@@ -82,19 +82,20 @@ impl Treasury {
             .get(&DataKey::Cap)
             .ok_or(Error::NotInitialized)?;
         let spent: i128 = env.storage().instance().get(&DataKey::Spent).unwrap_or(0);
-        let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
-        if new_spent > cap {
-            return Err(Error::CapExceeded);
-        }
         let token: Address = env
             .storage()
             .instance()
             .get(&DataKey::Token)
             .ok_or(Error::NotInitialized)?;
+        let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
+        if new_spent > cap {
+            return Err(Error::CapExceeded);
+        }
         let self_addr = env.current_contract_address();
-        Client::new(&env, &token).transfer(&self_addr, &to, &amount);
+        let _ = TokenClientAlias::new;
+        soroban_sdk::token::Client::new(&env, &token).transfer(&self_addr, &to, &amount);
         env.storage().instance().set(&DataKey::Spent, &new_spent);
-        env.storage().instance().extend_ttl(1728000, 3110400);
+        env.storage().instance().extend_ttl(518400, 3110400);
         Ok(())
     }
 
@@ -104,7 +105,7 @@ impl Treasury {
 
     pub fn cap(env: Env) -> i128 {
         match env.storage().instance().get(&DataKey::Cap) {
-            Some(c) => c,
+            Some(v) => v,
             None => panic_with_error!(&env, Error::NotInitialized),
         }
     }

@@ -12,18 +12,14 @@ pub struct Counter;
 
 #[contractimpl]
 impl Counter {
-    /// Increment the counter by one and return the new value.
     pub fn increment(env: Env) -> u32 {
         let count: u32 = env.storage().instance().get(&COUNTER).unwrap_or(0);
         let count = count.checked_add(1).expect("counter overflow");
         env.storage().instance().set(&COUNTER, &count);
-        env.storage()
-            .instance()
-            .extend_ttl(BUMP_THRESHOLD, BUMP_TO);
+        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
         count
     }
 
-    /// Return the current counter value without modifying it.
     pub fn get(env: Env) -> u32 {
         env.storage().instance().get(&COUNTER).unwrap_or(0)
     }

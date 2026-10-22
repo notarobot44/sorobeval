@@ -40,11 +40,11 @@ fn read_token(env: &Env) -> Result<Address, Error> {
         .ok_or(Error::NotInitialized)
 }
 
-fn read_cap(env: &Env) -> Result<i128, Error> {
+fn read_cap(env: &Env) -> i128 {
     env.storage()
         .instance()
         .get::<DataKey, i128>(&DataKey::Cap)
-        .ok_or(Error::NotInitialized)
+        .unwrap_or(0)
 }
 
 fn read_spent(env: &Env) -> i128 {
@@ -52,13 +52,6 @@ fn read_spent(env: &Env) -> i128 {
         .instance()
         .get::<DataKey, i128>(&DataKey::Spent)
         .unwrap_or(0)
-}
-
-fn is_whitelisted(env: &Env, who: &Address) -> bool {
-    env.storage()
-        .persistent()
-        .get::<DataKey, bool>(&DataKey::Whitelist(who.clone()))
-        .unwrap_or(false)
 }
 
 #[contractimpl]
@@ -93,18 +86,24 @@ impl Treasury {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-        if !is_whitelisted(&env, &to) {
+
+        let whitelisted: bool = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Whitelist(to.clone()))
+            .unwrap_or(false);
+        if !whitelisted {
             return Err(Error::NotWhitelisted);
         }
 
-        let cap = read_cap(&env)?;
+        let cap = read_cap(&env);
         let spent = read_spent(&env);
         let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
         if new_spent > cap {
             return Err(Error::CapExceeded);
         }
 
-        // Effects before interaction.
+        // Update state before the external call.
         env.storage().instance().set(&DataKey::Spent, &new_spent);
 
         let token_addr = read_token(&env)?;
@@ -119,9 +118,6 @@ impl Treasury {
     }
 
     pub fn cap(env: Env) -> i128 {
-        env.storage()
-            .instance()
-            .get::<DataKey, i128>(&DataKey::Cap)
-            .unwrap_or(0)
+        read_cap(&env)
     }
 }

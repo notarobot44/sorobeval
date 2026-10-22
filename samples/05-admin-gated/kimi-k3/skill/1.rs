@@ -36,11 +36,15 @@ impl Gated {
             .get(&DataKey::Admin)
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
+
         env.storage().instance().set(&DataKey::Value, &value);
         Ok(())
     }
 
     pub fn value(env: Env) -> u32 {
-        env.storage().instance().get(&DataKey::Value).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Value)
+            .unwrap_or(0)
     }
 }

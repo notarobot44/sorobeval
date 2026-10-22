@@ -1,11 +1,9 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, token, Address, Env,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, token::Client,
+    Address, Env,
 };
-
-const TTL_THRESHOLD: u32 = 30 * 17_280;
-const TTL_EXTEND_TO: u32 = 120 * 17_280;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -21,24 +19,24 @@ pub enum Error {
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
-    Config,
+    Admin,
+    Token,
+    Cap,
     Spent,
     Whitelisted(Address),
 }
 
-#[contracttype]
-#[derive(Clone)]
-struct Config {
-    admin: Address,
-    token: Address,
-    cap: i128,
-}
+const TTL_THRESHOLD: u32 = 30 * 17_280;
+const TTL_EXTEND_TO: u32 = 120 * 17_280;
 
-fn load_config(env: &Env) -> Result<Config, Error> {
-    env.storage()
+fn require_admin(env: &Env) -> Result<(), Error> {
+    let admin: Address = env
+        .storage()
         .instance()
-        .get(&DataKey::Config)
-        .ok_or(Error::NotInitialized)
+        .get(&DataKey::Admin)
+        .ok_or(Error::NotInitialized)?;
+    admin.require_auth();
+    Ok(())
 }
 
 fn extend_instance_ttl(env: &Env) {
@@ -52,13 +50,8 @@ pub struct Treasury;
 
 #[contractimpl]
 impl Treasury {
-    pub fn init(
-        env: Env,
-        admin: Address,
-        token: Address,
-        cap: i128,
-    ) -> Result<(), Error> {
-        if env.storage().instance().has(&DataKey::Config) {
+    pub fn init(env: Env, admin: Address, token: Address, cap: i128) -> Result<(), Error> {
+        if env.storage().instance().has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
         if cap <= 0 {
@@ -67,9 +60,9 @@ impl Treasury {
 
         admin.require_auth();
 
-        env.storage()
-            .instance()
-            .set(&DataKey::Config, &Config { admin, token, cap });
+        env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
         extend_instance_ttl(&env);
 
@@ -77,8 +70,7 @@ impl Treasury {
     }
 
     pub fn whitelist(env: Env, recipient: Address) -> Result<(), Error> {
-        let config = load_config(&env)?;
-        config.admin.require_auth();
+        require_admin(&env)?;
 
         let key = DataKey::Whitelisted(recipient);
         env.storage().persistent().set(&key, &true);
@@ -91,36 +83,56 @@ impl Treasury {
     }
 
     pub fn spend(env: Env, to: Address, amount: i128) -> Result<(), Error> {
-        let config = load_config(&env)?;
-        config.admin.require_auth();
+        require_admin(&env)?;
 
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
 
-        let key = DataKey::Whitelisted(to.clone());
-        let allowed: bool = env.storage().persistent().get(&key).unwrap_or(false);
-        if !allowed {
+        let recipient_key = DataKey::Whitelisted(to.clone());
+        if !env
+            .storage()
+            .persistent()
+            .get::<_, bool>(&recipient_key)
+            .unwrap_or(false)
+        {
             return Err(Error::NotWhitelisted);
         }
 
-        let spent: i128 = env.storage().instance().get(&DataKey::Spent).unwrap_or(0);
+        let cap: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .ok_or(Error::NotInitialized)?;
+        let spent: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::Spent)
+            .ok_or(Error::NotInitialized)?;
+
         let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
-        if new_spent > config.cap {
+        if new_spent > cap {
             return Err(Error::CapExceeded);
         }
 
-        // A failed token transfer atomically rolls back this update.
-        env.storage().instance().set(&DataKey::Spent, &new_spent);
+        let token: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Token)
+            .ok_or(Error::NotInitialized)?;
+
+        // A failed token transfer atomically rolls back this accounting update.
+        env.storage()
+            .instance()
+            .set(&DataKey::Spent, &new_spent);
         extend_instance_ttl(&env);
         env.storage()
             .persistent()
-            .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+            .extend_ttl(&recipient_key, TTL_THRESHOLD, TTL_EXTEND_TO);
 
-        let destination = to.into();
-        token::Client::new(&env, &config.token).transfer(
+        Client::new(&env, &token).transfer(
             &env.current_contract_address(),
-            &destination,
+            &to,
             &amount,
         );
 
@@ -128,11 +140,16 @@ impl Treasury {
     }
 
     pub fn spent(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::Spent).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Spent)
+            .unwrap_or(0)
     }
 
     pub fn cap(env: Env) -> i128 {
-        let config: Option<Config> = env.storage().instance().get(&DataKey::Config);
-        config.map(|config| config.cap).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .unwrap_or_else(|| panic_with_error!(&env, Error::NotInitialized))
     }
 }

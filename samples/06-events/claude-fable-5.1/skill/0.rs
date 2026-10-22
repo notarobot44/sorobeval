@@ -19,9 +19,12 @@ impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
         let count: u32 = env.storage().instance().get(&COUNT).unwrap_or(0);
         let count = count + 1;
+
         env.storage().instance().set(&LAST, &value);
         env.storage().instance().set(&COUNT, &count);
+
         Record { count, value }.publish(&env);
+
         count
     }
 

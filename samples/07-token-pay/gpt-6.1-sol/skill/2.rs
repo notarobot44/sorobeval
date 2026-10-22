@@ -26,7 +26,7 @@ impl Payer {
         }
 
         from.require_auth();
-        Client::new(&env, &token).transfer(&from, &to.into(), &amount);
+        Client::new(&env, &token).transfer(&from, &to, &amount);
 
         Ok(())
     }

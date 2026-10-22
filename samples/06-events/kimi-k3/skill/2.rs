@@ -1,8 +1,6 @@
 #![no_std]
 use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
 
-// Topics: ("record", count) — the struct name snake-cased is the first topic
-// by default, the #[topic] field follows. `value` is the data payload.
 #[contractevent]
 pub struct Record {
     #[topic]
@@ -16,18 +14,10 @@ pub struct Recorder;
 #[contractimpl]
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
-        let count: u32 = env
-            .storage()
-            .instance()
-            .get(&symbol_short!("count"))
-            .unwrap_or(0);
-        let count = count + 1;
-
+        let count: u32 = env.storage().instance().get(&symbol_short!("count")).unwrap_or(0) + 1;
         env.storage().instance().set(&symbol_short!("count"), &count);
         env.storage().instance().set(&symbol_short!("value"), &value);
-
         Record { count, value }.publish(&env);
-
         count
     }
 

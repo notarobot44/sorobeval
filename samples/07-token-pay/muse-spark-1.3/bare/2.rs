@@ -18,8 +18,7 @@ impl Payer {
             return Err(Error::InvalidAmount);
         }
         from.require_auth();
-        let client = Client::new(&env, &token);
-        client.transfer(&from, &to, &amount);
+        Client::new(&env, &token).transfer(&from, &to, &amount);
         Ok(())
     }
 }

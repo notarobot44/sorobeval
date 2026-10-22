@@ -13,7 +13,6 @@ pub enum Error {
 }
 
 #[contracttype]
-#[derive(Clone)]
 enum DataKey {
     Admin,
     Value,

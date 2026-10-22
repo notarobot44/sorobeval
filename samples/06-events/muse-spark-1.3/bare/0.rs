@@ -4,7 +4,7 @@ use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
 #[contract]
 pub struct Recorder;
 
-#[contractevent]
+#[contractevent(data_format = "single-value")]
 pub struct Record {
     #[topic]
     pub count: u32,
@@ -14,12 +14,16 @@ pub struct Record {
 #[contractimpl]
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
-        let count_key = symbol_short!("count");
-        let last_key = symbol_short!("last");
-        let count: u32 = env.storage().instance().get(&count_key).unwrap_or(0) + 1;
-        env.storage().instance().set(&count_key, &count);
-        env.storage().instance().set(&last_key, &value);
-        env.storage().instance().extend_ttl(50, 100);
+        let count: u32 = env
+            .storage()
+            .instance()
+            .get(&symbol_short!("count"))
+            .unwrap_or(0)
+            + 1;
+        env.storage()
+            .instance()
+            .set(&symbol_short!("count"), &count);
+        env.storage().instance().set(&symbol_short!("last"), &value);
         Record { count, value }.publish(&env);
         count
     }

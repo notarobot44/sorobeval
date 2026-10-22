@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, token, Address, Env,
+    contract, contracterror, contractimpl, contracttype, token::Client, Address, Env,
 };
 
 const TTL_THRESHOLD: u32 = 30 * 17_280;
@@ -28,9 +28,6 @@ enum DataKey {
     Whitelisted(Address),
 }
 
-#[contract]
-pub struct Treasury;
-
 fn require_admin(env: &Env) -> Result<(), Error> {
     let admin: Address = env
         .storage()
@@ -47,14 +44,12 @@ fn extend_instance_ttl(env: &Env) {
         .extend_ttl(TTL_THRESHOLD, TTL_EXTEND_TO);
 }
 
+#[contract]
+pub struct Treasury;
+
 #[contractimpl]
 impl Treasury {
-    pub fn init(
-        env: Env,
-        admin: Address,
-        token: Address,
-        cap: i128,
-    ) -> Result<(), Error> {
+    pub fn init(env: Env, admin: Address, token: Address, cap: i128) -> Result<(), Error> {
         if env.storage().instance().has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
@@ -69,7 +64,6 @@ impl Treasury {
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
         extend_instance_ttl(&env);
-
         Ok(())
     }
 
@@ -82,7 +76,6 @@ impl Treasury {
             .persistent()
             .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
         extend_instance_ttl(&env);
-
         Ok(())
     }
 
@@ -93,13 +86,8 @@ impl Treasury {
             return Err(Error::InvalidAmount);
         }
 
-        let whitelist_key = DataKey::Whitelisted(to.clone());
-        let whitelisted: bool = env
-            .storage()
-            .persistent()
-            .get(&whitelist_key)
-            .unwrap_or(false);
-        if !whitelisted {
+        let key = DataKey::Whitelisted(to.clone());
+        if !env.storage().persistent().get(&key).unwrap_or(false) {
             return Err(Error::NotWhitelisted);
         }
 
@@ -119,27 +107,26 @@ impl Treasury {
             return Err(Error::CapExceeded);
         }
 
-        let token_address: Address = env
+        let token: Address = env
             .storage()
             .instance()
             .get(&DataKey::Token)
             .ok_or(Error::NotInitialized)?;
 
-        // A failed transfer rolls back this update and all other writes.
+        // A failed transfer rolls back this update along with the invocation.
         env.storage()
             .instance()
             .set(&DataKey::Spent, &new_spent);
         extend_instance_ttl(&env);
         env.storage()
             .persistent()
-            .extend_ttl(&whitelist_key, TTL_THRESHOLD, TTL_EXTEND_TO);
+            .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
 
-        token::Client::new(&env, &token_address).transfer(
+        Client::new(&env, &token).transfer(
             &env.current_contract_address(),
-            &to.into(),
+            &to,
             &amount,
         );
-
         Ok(())
     }
 

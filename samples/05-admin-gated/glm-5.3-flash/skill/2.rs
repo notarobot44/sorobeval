@@ -26,6 +26,7 @@ impl Gated {
             return Err(Error::AlreadyInitialized);
         }
         env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::Value, &0u32);
         Ok(())
     }
 

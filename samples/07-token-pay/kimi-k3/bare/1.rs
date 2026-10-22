@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracterror, contractimpl, token, Address, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, token::TokenClient, Address, Env};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -21,13 +21,13 @@ impl Payer {
         token: Address,
         amount: i128,
     ) -> Result<(), Error> {
-        from.require_auth();
-
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
 
-        let client = token::Client::new(&env, &token);
+        from.require_auth();
+
+        let client = TokenClient::new(&env, &token);
         client.transfer(&from, &to, &amount);
 
         Ok(())

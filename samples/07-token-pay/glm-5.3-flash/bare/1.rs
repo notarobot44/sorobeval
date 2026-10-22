@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contractclient, contracterror, contracttype, Address, Env};
+use soroban_sdk::{contract, contracterror, token::Client, Address, Env};
 
 #[contracterror]
 #[repr(u32)]
@@ -8,12 +8,13 @@ pub enum Error {
     InvalidAmount = 1,
 }
 
-#[contracttype]
+#[contract]
 pub struct Payer;
 
+#[contractimpl]
 impl Payer {
     pub fn pay(
-        env: &Env,
+        env: Env,
         from: Address,
         to: Address,
         token: Address,
@@ -22,12 +23,9 @@ impl Payer {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-
         from.require_auth();
-
-        let client = TokenClient::new(env, &token);
+        let client = Client::new(&env, &token);
         client.transfer(&from, &to, &amount);
-
         Ok(())
     }
 }

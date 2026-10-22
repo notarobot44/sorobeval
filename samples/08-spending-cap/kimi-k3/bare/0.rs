@@ -14,12 +14,13 @@ pub enum Error {
 }
 
 #[contracttype]
+#[derive(Clone)]
 pub enum DataKey {
     Admin,
     Token,
     Cap,
     Spent,
-    Whitelisted(Address),
+    Whitelist(Address),
 }
 
 #[contract]
@@ -34,12 +35,10 @@ impl Treasury {
         if cap <= 0 {
             return Err(Error::InvalidAmount);
         }
-
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
-
         Ok(())
     }
 
@@ -50,11 +49,9 @@ impl Treasury {
             .get(&DataKey::Admin)
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
-
         env.storage()
-            .instance()
-            .set(&DataKey::Whitelisted(recipient), &true);
-
+            .persistent()
+            .set(&DataKey::Whitelist(recipient), &true);
         Ok(())
     }
 
@@ -69,11 +66,10 @@ impl Treasury {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-
         if !env
             .storage()
-            .instance()
-            .has(&DataKey::Whitelisted(to.clone()))
+            .persistent()
+            .has(&DataKey::Whitelist(to.clone()))
         {
             return Err(Error::NotWhitelisted);
         }
@@ -89,22 +85,22 @@ impl Treasury {
             .get(&DataKey::Spent)
             .unwrap_or(0);
 
-        let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
-        if new_spent > cap {
+        if spent + amount > cap {
             return Err(Error::CapExceeded);
         }
 
-        let token_address: Address = env
+        let token_addr: Address = env
             .storage()
             .instance()
             .get(&DataKey::Token)
             .ok_or(Error::NotInitialized)?;
 
-        let client = token::Client::new(&env, &token_address);
+        let client = token::Client::new(&env, &token_addr);
         client.transfer(&env.current_contract_address(), &to, &amount);
 
-        env.storage().instance().set(&DataKey::Spent, &new_spent);
-
+        env.storage()
+            .instance()
+            .set(&DataKey::Spent, &(spent + amount));
         Ok(())
     }
 
@@ -116,6 +112,9 @@ impl Treasury {
     }
 
     pub fn cap(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::Cap).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .unwrap_or(0)
     }
 }

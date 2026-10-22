@@ -2,10 +2,10 @@
 
 use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env, Symbol};
 
-const COUNT: Symbol = symbol_short!("COUNT");
 const LAST: Symbol = symbol_short!("LAST");
+const COUNT: Symbol = symbol_short!("COUNT");
 
-#[contractevent]
+#[contractevent(topics = ["record"])]
 pub struct Record {
     #[topic]
     pub count: u32,
@@ -19,9 +19,11 @@ pub struct Recorder;
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
         let storage = env.storage().instance();
+
         let count: u32 = storage.get::<Symbol, u32>(&COUNT).unwrap_or(0) + 1;
-        storage.set(&COUNT, &count);
+
         storage.set(&LAST, &value);
+        storage.set(&COUNT, &count);
 
         Record { count, value }.publish(&env);
 

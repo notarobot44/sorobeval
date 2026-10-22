@@ -12,7 +12,7 @@ impl Store {
     }
 
     pub fn get(env: Env, key: Symbol) -> Option<i128> {
-        env.storage().instance().get(&key)
+        env.storage().instance().get::<Symbol, i128>(&key)
     }
 
     pub fn remove(env: Env, key: Symbol) {

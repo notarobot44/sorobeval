@@ -15,19 +15,12 @@ pub struct Record {
 #[contractimpl]
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
-        let count: u32 = env
-            .storage()
-            .instance()
-            .get(&symbol_short!("count"))
-            .unwrap_or(0);
+        let storage = env.storage().instance();
+        let count: u32 = storage.get(&symbol_short!("count")).unwrap_or(0);
         let count = count.checked_add(1).expect("record count overflow");
 
-        env.storage()
-            .instance()
-            .set(&symbol_short!("value"), &value);
-        env.storage()
-            .instance()
-            .set(&symbol_short!("count"), &count);
+        storage.set(&symbol_short!("value"), &value);
+        storage.set(&symbol_short!("count"), &count);
 
         Record { count, value }.publish(&env);
 

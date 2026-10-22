@@ -18,7 +18,7 @@ pub struct Recorder;
 impl Recorder {
     pub fn record(env: Env, value: u32) -> u32 {
         let count: u32 = env.storage().instance().get(&COUNT).unwrap_or(0);
-        let count = count.checked_add(1).expect("record count overflow");
+        let count = count.checked_add(1).expect("overflow");
 
         env.storage().instance().set(&LAST, &value);
         env.storage().instance().set(&COUNT, &count);

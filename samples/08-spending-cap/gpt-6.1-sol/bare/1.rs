@@ -4,9 +4,6 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
 };
 
-#[contract]
-pub struct Treasury;
-
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
@@ -28,11 +25,17 @@ enum DataKey {
     Whitelisted(Address),
 }
 
-fn admin(env: &Env) -> Result<Address, Error> {
-    env.storage()
+#[contract]
+pub struct Treasury;
+
+fn require_admin(env: &Env) -> Result<(), Error> {
+    let admin: Address = env
+        .storage()
         .instance()
         .get(&DataKey::Admin)
-        .ok_or(Error::NotInitialized)
+        .ok_or(Error::NotInitialized)?;
+    admin.require_auth();
+    Ok(())
 }
 
 #[contractimpl]
@@ -47,7 +50,6 @@ impl Treasury {
 
         admin.require_auth();
 
-        // Keep all security-critical state in the same instance lifetime.
         let storage = env.storage().instance();
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
@@ -58,29 +60,34 @@ impl Treasury {
     }
 
     pub fn whitelist(env: Env, recipient: Address) -> Result<(), Error> {
-        admin(&env)?.require_auth();
+        require_admin(&env)?;
+
         env.storage()
             .instance()
             .set(&DataKey::Whitelisted(recipient), &true);
+
         Ok(())
     }
 
     pub fn spend(env: Env, to: Address, amount: i128) -> Result<(), Error> {
-        admin(&env)?.require_auth();
+        require_admin(&env)?;
 
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
 
         let storage = env.storage().instance();
+
         if !storage
-            .get::<DataKey, bool>(&DataKey::Whitelisted(to.clone()))
+            .get::<_, bool>(&DataKey::Whitelisted(to.clone()))
             .unwrap_or(false)
         {
             return Err(Error::NotWhitelisted);
         }
 
-        let cap: i128 = storage.get(&DataKey::Cap).ok_or(Error::NotInitialized)?;
+        let cap: i128 = storage
+            .get(&DataKey::Cap)
+            .ok_or(Error::NotInitialized)?;
         let spent: i128 = storage.get(&DataKey::Spent).unwrap_or(0);
         let next_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
 
@@ -88,11 +95,12 @@ impl Treasury {
             return Err(Error::CapExceeded);
         }
 
-        let token_address: Address =
-            storage.get(&DataKey::Token).ok_or(Error::NotInitialized)?;
+        let token_address: Address = storage
+            .get(&DataKey::Token)
+            .ok_or(Error::NotInitialized)?;
 
-        // Reserve the expenditure before the external call. A failed transfer
-        // aborts the invocation and rolls back this storage update.
+        // Record the outflow before the external call. A failed transfer
+        // aborts the invocation and rolls this update back.
         storage.set(&DataKey::Spent, &next_spent);
 
         token::Client::new(&env, &token_address).transfer(
@@ -109,9 +117,9 @@ impl Treasury {
     }
 
     pub fn cap(env: Env) -> i128 {
-        match env.storage().instance().get(&DataKey::Cap) {
-            Some(cap) => cap,
-            None => panic_with_error!(&env, Error::NotInitialized),
-        }
+        env.storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .unwrap_or_else(|| panic_with_error!(&env, Error::NotInitialized))
     }
 }

@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token::Client, Address, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, token::Client};
 
 #[contract]
 pub struct Treasury;
@@ -17,12 +17,12 @@ pub enum Error {
 
 #[contracttype]
 #[derive(Clone)]
-pub enum DataKey {
+enum DataKey {
     Admin,
     Token,
     Cap,
     Spent,
-    Whitelist(Address),
+    Whitelisted(Address),
 }
 
 #[contractimpl]
@@ -31,6 +31,7 @@ impl Treasury {
         if env.storage().instance().has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
+        admin.require_auth();
         if cap <= 0 {
             return Err(Error::InvalidAmount);
         }
@@ -38,7 +39,6 @@ impl Treasury {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
-        env.storage().instance().extend_ttl(50, 200);
         Ok(())
     }
 
@@ -50,9 +50,8 @@ impl Treasury {
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
         env.storage()
-            .instance()
-            .set(&DataKey::Whitelist(recipient), &true);
-        env.storage().instance().extend_ttl(50, 200);
+            .persistent()
+            .set(&DataKey::Whitelisted(recipient), &true);
         Ok(())
     }
 
@@ -68,8 +67,8 @@ impl Treasury {
         }
         let whitelisted: bool = env
             .storage()
-            .instance()
-            .get(&DataKey::Whitelist(to.clone()))
+            .persistent()
+            .get(&DataKey::Whitelisted(to.clone()))
             .unwrap_or(false);
         if !whitelisted {
             return Err(Error::NotWhitelisted);
@@ -93,10 +92,10 @@ impl Treasury {
             .instance()
             .get(&DataKey::Token)
             .ok_or(Error::NotInitialized)?;
-        let client = Client::new(&env, &token);
-        client.transfer(&env.current_contract_address(), &to, &amount);
         env.storage().instance().set(&DataKey::Spent, &new_spent);
-        env.storage().instance().extend_ttl(50, 200);
+        let contract_addr = env.current_contract_address();
+        let client = Client::new(&env, &token);
+        client.transfer(&contract_addr, &to, &amount);
         Ok(())
     }
 
@@ -105,8 +104,6 @@ impl Treasury {
     }
 
     pub fn cap(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::Cap).unwrap_or_else(|| {
-            soroban_sdk::panic_with_error!(&env, Error::NotInitialized)
-        })
+        env.storage().instance().get(&DataKey::Cap).unwrap_or(0)
     }
 }

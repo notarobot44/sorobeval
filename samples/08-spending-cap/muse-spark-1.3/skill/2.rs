@@ -1,8 +1,6 @@
 #![no_std]
-use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, Env,
-};
-use soroban_sdk::token::Client as TokenClient;
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
+use soroban_sdk::token::Client;
 
 #[contracttype]
 #[derive(Clone)]
@@ -28,6 +26,9 @@ pub enum Error {
 #[contract]
 pub struct Treasury;
 
+const BUMP_THRESHOLD: u32 = 30 * 17280;
+const BUMP_TO: u32 = 120 * 17280;
+
 #[contractimpl]
 impl Treasury {
     pub fn init(env: Env, admin: Address, token: Address, cap: i128) -> Result<(), Error> {
@@ -42,7 +43,7 @@ impl Treasury {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Cap, &cap);
         env.storage().instance().set(&DataKey::Spent, &0i128);
-        env.storage().instance().extend_ttl(17280, 3_110_400);
+        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
         Ok(())
     }
 
@@ -56,7 +57,7 @@ impl Treasury {
         env.storage()
             .instance()
             .set(&DataKey::Whitelisted(recipient), &true);
-        env.storage().instance().extend_ttl(17280, 3_110_400);
+        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
         Ok(())
     }
 
@@ -98,20 +99,21 @@ impl Treasury {
             return Err(Error::CapExceeded);
         }
         let self_addr = env.current_contract_address();
-        TokenClient::new(&env, &token).transfer(&self_addr, &to, &amount);
+        let client = Client::new(&env, &token);
+        client.transfer(&self_addr, &to, &amount);
         env.storage().instance().set(&DataKey::Spent, &new_spent);
-        env.storage().instance().extend_ttl(17280, 3_110_400);
+        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
         Ok(())
     }
 
     pub fn spent(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::Spent).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Spent)
+            .unwrap_or(0i128)
     }
 
     pub fn cap(env: Env) -> i128 {
-        match env.storage().instance().get(&DataKey::Cap) {
-            Some(c) => c,
-            None => panic_with_error!(&env, Error::NotInitialized),
-        }
+        env.storage().instance().get(&DataKey::Cap).unwrap_or(0i128)
     }
 }

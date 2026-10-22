@@ -22,21 +22,19 @@ pub struct Gated;
 #[contractimpl]
 impl Gated {
     pub fn init(env: Env, admin: Address) -> Result<(), Error> {
-        if env.storage().instance().has(&DataKey::Admin) {
+        let storage = env.storage().instance();
+        if storage.has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
-        env.storage().instance().set(&DataKey::Admin, &admin);
+        storage.set(&DataKey::Admin, &admin);
         Ok(())
     }
 
     pub fn set_value(env: Env, value: u32) -> Result<(), Error> {
-        let admin: Address = env
-            .storage()
-            .instance()
-            .get(&DataKey::Admin)
-            .ok_or(Error::NotInitialized)?;
+        let storage = env.storage().instance();
+        let admin: Address = storage.get(&DataKey::Admin).ok_or(Error::NotInitialized)?;
         admin.require_auth();
-        env.storage().instance().set(&DataKey::Value, &value);
+        storage.set(&DataKey::Value, &value);
         Ok(())
     }
 

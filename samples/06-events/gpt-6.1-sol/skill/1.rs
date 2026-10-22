@@ -1,18 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{
-    contract, contracterror, contractevent, contractimpl, panic_with_error, symbol_short, Env,
-};
-
-#[contract]
-pub struct Recorder;
-
-#[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[repr(u32)]
-pub enum Error {
-    CountOverflow = 1,
-}
+use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
 
 #[contractevent]
 pub struct Record {
@@ -20,6 +8,9 @@ pub struct Record {
     pub count: u32,
     pub value: u32,
 }
+
+#[contract]
+pub struct Recorder;
 
 #[contractimpl]
 impl Recorder {
@@ -29,24 +20,20 @@ impl Recorder {
             .instance()
             .get(&symbol_short!("count"))
             .unwrap_or(0);
-
-        let count = count
-            .checked_add(1)
-            .unwrap_or_else(|| panic_with_error!(&env, Error::CountOverflow));
+        let count = count.checked_add(1).expect("record count overflow");
 
         env.storage()
             .instance()
-            .set(&symbol_short!("last"), &value);
+            .set(&symbol_short!("value"), &value);
         env.storage()
             .instance()
             .set(&symbol_short!("count"), &count);
 
         Record { count, value }.publish(&env);
-
         count
     }
 
     pub fn last(env: Env) -> Option<u32> {
-        env.storage().instance().get(&symbol_short!("last"))
+        env.storage().instance().get(&symbol_short!("value"))
     }
 }

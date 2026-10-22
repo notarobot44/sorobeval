@@ -17,12 +17,9 @@ impl Counter {
         let count: u32 = env.storage().instance().get(&COUNTER).unwrap_or(0);
         let count = count.checked_add(1).expect("counter overflow");
         env.storage().instance().set(&COUNTER, &count);
-
-        // Keep the contract instance (and its storage) alive.
         env.storage()
             .instance()
             .extend_ttl(BUMP_THRESHOLD, BUMP_TO);
-
         count
     }
 

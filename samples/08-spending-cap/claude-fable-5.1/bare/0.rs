@@ -26,40 +26,32 @@ pub enum DataKey {
 #[contract]
 pub struct Treasury;
 
-impl Treasury {
-    fn admin(env: &Env) -> Result<Address, Error> {
-        env.storage()
-            .instance()
-            .get::<DataKey, Address>(&DataKey::Admin)
-            .ok_or(Error::NotInitialized)
-    }
+fn load_admin(env: &Env) -> Result<Address, Error> {
+    env.storage()
+        .instance()
+        .get::<DataKey, Address>(&DataKey::Admin)
+        .ok_or(Error::NotInitialized)
+}
 
-    fn token(env: &Env) -> Result<Address, Error> {
-        env.storage()
-            .instance()
-            .get::<DataKey, Address>(&DataKey::Token)
-            .ok_or(Error::NotInitialized)
-    }
+fn load_token(env: &Env) -> Result<Address, Error> {
+    env.storage()
+        .instance()
+        .get::<DataKey, Address>(&DataKey::Token)
+        .ok_or(Error::NotInitialized)
+}
 
-    fn cap_value(env: &Env) -> Result<i128, Error> {
-        env.storage()
-            .instance()
-            .get::<DataKey, i128>(&DataKey::Cap)
-            .ok_or(Error::NotInitialized)
-    }
+fn load_cap(env: &Env) -> Result<i128, Error> {
+    env.storage()
+        .instance()
+        .get::<DataKey, i128>(&DataKey::Cap)
+        .ok_or(Error::NotInitialized)
+}
 
-    fn spent_value(env: &Env) -> i128 {
-        env.storage()
-            .instance()
-            .get::<DataKey, i128>(&DataKey::Spent)
-            .unwrap_or(0)
-    }
-
-    fn require_admin(env: &Env) -> Result<Address, Error> {
-        let admin = Self::admin(env)?;
-        admin.require_auth();
-        Ok(admin)
-    }
+fn load_spent(env: &Env) -> i128 {
+    env.storage()
+        .instance()
+        .get::<DataKey, i128>(&DataKey::Spent)
+        .unwrap_or(0)
 }
 
 #[contractimpl]
@@ -79,7 +71,8 @@ impl Treasury {
     }
 
     pub fn whitelist(env: Env, recipient: Address) -> Result<(), Error> {
-        Self::require_admin(&env)?;
+        let admin = load_admin(&env)?;
+        admin.require_auth();
         env.storage()
             .persistent()
             .set(&DataKey::Whitelisted(recipient), &true);
@@ -87,32 +80,33 @@ impl Treasury {
     }
 
     pub fn spend(env: Env, to: Address, amount: i128) -> Result<(), Error> {
-        Self::require_admin(&env)?;
+        let admin = load_admin(&env)?;
+        admin.require_auth();
 
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
 
-        let is_whitelisted: bool = env
+        let whitelisted: bool = env
             .storage()
             .persistent()
-            .get(&DataKey::Whitelisted(to.clone()))
+            .get::<DataKey, bool>(&DataKey::Whitelisted(to.clone()))
             .unwrap_or(false);
-        if !is_whitelisted {
+        if !whitelisted {
             return Err(Error::NotWhitelisted);
         }
 
-        let cap = Self::cap_value(&env)?;
-        let spent = Self::spent_value(&env);
+        let cap = load_cap(&env)?;
+        let spent = load_spent(&env);
         let new_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
         if new_spent > cap {
             return Err(Error::CapExceeded);
         }
 
-        // Update the running total before performing the external transfer.
+        // Update state before the external call (checks-effects-interactions).
         env.storage().instance().set(&DataKey::Spent, &new_spent);
 
-        let token_addr = Self::token(&env)?;
+        let token_addr = load_token(&env)?;
         let client = token::Client::new(&env, &token_addr);
         client.transfer(&env.current_contract_address(), &to, &amount);
 
@@ -120,13 +114,10 @@ impl Treasury {
     }
 
     pub fn spent(env: Env) -> i128 {
-        Self::spent_value(&env)
+        load_spent(&env)
     }
 
     pub fn cap(env: Env) -> i128 {
-        env.storage()
-            .instance()
-            .get::<DataKey, i128>(&DataKey::Cap)
-            .unwrap_or(0)
+        load_cap(&env).unwrap_or(0)
     }
 }

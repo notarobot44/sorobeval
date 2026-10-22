@@ -1,22 +1,22 @@
 #![no_std]
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
 
-#[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-#[repr(u32)]
-pub enum Error {
-    AlreadyInitialized = 1,
-    NotInitialized = 2,
-}
+#[contract]
+pub struct Gated;
 
 #[contracttype]
-pub enum DataKey {
+enum DataKey {
     Admin,
     Value,
 }
 
-#[contract]
-pub struct Gated;
+#[contracterror]
+#[repr(u32)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Error {
+    AlreadyInitialized = 1,
+    NotInitialized = 2,
+}
 
 #[contractimpl]
 impl Gated {

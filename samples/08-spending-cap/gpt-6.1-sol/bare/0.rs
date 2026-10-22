@@ -18,33 +18,30 @@ pub enum Error {
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
-    State,
+    Admin,
+    Token,
+    Cap,
+    Spent,
     Whitelisted(Address),
-}
-
-#[contracttype]
-#[derive(Clone)]
-struct State {
-    admin: Address,
-    token: Address,
-    cap: i128,
-    spent: i128,
-}
-
-fn load_state(env: &Env) -> Result<State, Error> {
-    env.storage()
-        .instance()
-        .get(&DataKey::State)
-        .ok_or(Error::NotInitialized)
 }
 
 #[contract]
 pub struct Treasury;
 
+fn require_admin(env: &Env) -> Result<(), Error> {
+    let admin: Address = env
+        .storage()
+        .instance()
+        .get(&DataKey::Admin)
+        .ok_or(Error::NotInitialized)?;
+    admin.require_auth();
+    Ok(())
+}
+
 #[contractimpl]
 impl Treasury {
     pub fn init(env: Env, admin: Address, token: Address, cap: i128) -> Result<(), Error> {
-        if env.storage().instance().has(&DataKey::State) {
+        if env.storage().instance().has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
         if cap <= 0 {
@@ -53,22 +50,17 @@ impl Treasury {
 
         admin.require_auth();
 
-        env.storage().instance().set(
-            &DataKey::State,
-            &State {
-                admin,
-                token,
-                cap,
-                spent: 0,
-            },
-        );
+        // Keep all state in the same instance-storage lifetime.
+        let storage = env.storage().instance();
+        storage.set(&DataKey::Admin, &admin);
+        storage.set(&DataKey::Token, &token);
+        storage.set(&DataKey::Cap, &cap);
+        storage.set(&DataKey::Spent, &0_i128);
         Ok(())
     }
 
     pub fn whitelist(env: Env, recipient: Address) -> Result<(), Error> {
-        let state = load_state(&env)?;
-        state.admin.require_auth();
-
+        require_admin(&env)?;
         env.storage()
             .instance()
             .set(&DataKey::Whitelisted(recipient), &true);
@@ -76,35 +68,41 @@ impl Treasury {
     }
 
     pub fn spend(env: Env, to: Address, amount: i128) -> Result<(), Error> {
-        let mut state = load_state(&env)?;
-        state.admin.require_auth();
+        require_admin(&env)?;
 
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-        if !env
-            .storage()
-            .instance()
-            .has(&DataKey::Whitelisted(to.clone()))
+
+        let storage = env.storage().instance();
+        if !storage
+            .get::<_, bool>(&DataKey::Whitelisted(to.clone()))
+            .unwrap_or(false)
         {
             return Err(Error::NotWhitelisted);
         }
 
-        let new_spent = state
-            .spent
-            .checked_add(amount)
-            .ok_or(Error::CapExceeded)?;
+        let cap: i128 = storage
+            .get(&DataKey::Cap)
+            .ok_or(Error::NotInitialized)?;
+        let spent: i128 = storage
+            .get(&DataKey::Spent)
+            .ok_or(Error::NotInitialized)?;
+        let next_spent = spent.checked_add(amount).ok_or(Error::CapExceeded)?;
 
-        if new_spent > state.cap {
+        if next_spent > cap {
             return Err(Error::CapExceeded);
         }
 
-        // Reserve the spending allowance before the external call.
-        // A failed transfer rolls back this update with the invocation.
-        state.spent = new_spent;
-        env.storage().instance().set(&DataKey::State, &state);
+        let token_address: Address = storage
+            .get(&DataKey::Token)
+            .ok_or(Error::NotInitialized)?;
 
-        token::Client::new(&env, &state.token).transfer(
+        // Reserve the outflow before the external call. A failed transfer
+        // aborts the invocation and rolls back this update.
+        storage.set(&DataKey::Spent, &next_spent);
+
+        token::Client::new(&env, &token_address).transfer(
             &env.current_contract_address(),
             &to,
             &amount,
@@ -116,15 +114,14 @@ impl Treasury {
     pub fn spent(env: Env) -> i128 {
         env.storage()
             .instance()
-            .get::<DataKey, State>(&DataKey::State)
-            .map(|state| state.spent)
+            .get(&DataKey::Spent)
             .unwrap_or(0)
     }
 
     pub fn cap(env: Env) -> i128 {
-        match load_state(&env) {
-            Ok(state) => state.cap,
-            Err(error) => panic_with_error!(&env, error),
-        }
+        env.storage()
+            .instance()
+            .get(&DataKey::Cap)
+            .unwrap_or_else(|| panic_with_error!(&env, Error::NotInitialized))
     }
 }

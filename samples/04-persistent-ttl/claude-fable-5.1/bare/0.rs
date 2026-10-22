@@ -11,19 +11,21 @@ pub struct Persist;
 #[contractimpl]
 impl Persist {
     pub fn put(env: Env, key: u32, value: Bytes) {
-        let storage = env.storage().persistent();
-        storage.set(&key, &value);
-        storage.extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+        env.storage().persistent().set(&key, &value);
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
     }
 
     pub fn fetch(env: Env, key: u32) -> Option<Bytes> {
-        env.storage().persistent().get::<u32, Bytes>(&key)
+        env.storage().persistent().get(&key)
     }
 
     pub fn bump(env: Env, key: u32) {
-        let storage = env.storage().persistent();
-        if storage.has(&key) {
-            storage.extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+        if env.storage().persistent().has(&key) {
+            env.storage()
+                .persistent()
+                .extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
         }
     }
 }

@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, symbol_short, Address, Env, Symbol};
+use soroban_sdk::{contract, contracterror, contractimpl, symbol_short, Address, Env};
 
 #[contract]
 pub struct Gated;
@@ -12,16 +12,13 @@ pub enum Error {
     NotInitialized = 2,
 }
 
-const ADMIN_KEY: Symbol = symbol_short!("admin");
-const VALUE_KEY: Symbol = symbol_short!("value");
-
 #[contractimpl]
 impl Gated {
     pub fn init(env: Env, admin: Address) -> Result<(), Error> {
-        if env.storage().instance().has(&ADMIN_KEY) {
+        if env.storage().instance().has(&symbol_short!("admin")) {
             return Err(Error::AlreadyInitialized);
         }
-        env.storage().instance().set(&ADMIN_KEY, &admin);
+        env.storage().instance().set(&symbol_short!("admin"), &admin);
         Ok(())
     }
 
@@ -29,14 +26,14 @@ impl Gated {
         let admin: Address = env
             .storage()
             .instance()
-            .get(&ADMIN_KEY)
+            .get(&symbol_short!("admin"))
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
-        env.storage().instance().set(&VALUE_KEY, &value);
+        env.storage().instance().set(&symbol_short!("value"), &value);
         Ok(())
     }
 
     pub fn value(env: Env) -> u32 {
-        env.storage().instance().get(&VALUE_KEY).unwrap_or(0)
+        env.storage().instance().get(&symbol_short!("value")).unwrap_or(0)
     }
 }

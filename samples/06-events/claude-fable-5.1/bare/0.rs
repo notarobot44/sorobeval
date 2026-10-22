@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env, Symbol};
 
-const VALUE: Symbol = symbol_short!("VALUE");
+const LAST: Symbol = symbol_short!("LAST");
 const COUNT: Symbol = symbol_short!("COUNT");
 
 #[contractevent(topics = ["record"])]
@@ -25,7 +25,7 @@ impl Recorder {
             .unwrap_or(0)
             + 1;
 
-        env.storage().instance().set(&VALUE, &value);
+        env.storage().instance().set(&LAST, &value);
         env.storage().instance().set(&COUNT, &count);
 
         Record { count, value }.publish(&env);
@@ -34,6 +34,6 @@ impl Recorder {
     }
 
     pub fn last(env: Env) -> Option<u32> {
-        env.storage().instance().get::<Symbol, u32>(&VALUE)
+        env.storage().instance().get::<Symbol, u32>(&LAST)
     }
 }

@@ -10,9 +10,10 @@ pub struct Persist;
 #[contractimpl]
 impl Persist {
     pub fn put(env: Env, key: u32, value: Bytes) {
-        let storage = env.storage().persistent();
-        storage.set(&key, &value);
-        storage.extend_ttl(&key, THRESHOLD, EXTEND_TO);
+        env.storage().persistent().set(&key, &value);
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, THRESHOLD, EXTEND_TO);
     }
 
     pub fn fetch(env: Env, key: u32) -> Option<Bytes> {
@@ -20,9 +21,10 @@ impl Persist {
     }
 
     pub fn bump(env: Env, key: u32) {
-        let storage = env.storage().persistent();
-        if storage.has(&key) {
-            storage.extend_ttl(&key, THRESHOLD, EXTEND_TO);
+        if env.storage().persistent().has(&key) {
+            env.storage()
+                .persistent()
+                .extend_ttl(&key, THRESHOLD, EXTEND_TO);
         }
     }
 }

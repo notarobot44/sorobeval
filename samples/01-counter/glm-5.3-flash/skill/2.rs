@@ -2,40 +2,29 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Env};
 
-const DAY_IN_LEDGERS: u32 = 17280;
-const BUMP_THRESHOLD: u32 = 30 * DAY_IN_LEDGERS;
-const BUMP_TO: u32 = 120 * DAY_IN_LEDGERS;
-
 #[contract]
 pub struct Counter;
 
 #[contractimpl]
 impl Counter {
-    /// Increases the counter by one and returns the new value.
     pub fn increment(env: Env) -> u32 {
-        let count: u32 = env
+        let mut count: u32 = env
             .storage()
             .instance()
-            .get(&symbol_short!("COUNT"))
+            .get(&symbol_short!("count"))
             .unwrap_or(0);
-
-        let new_count = count + 1;
-
+        count += 1;
+        env.storage().instance().set(&symbol_short!("count"), &count);
         env.storage()
             .instance()
-            .set(&symbol_short!("COUNT"), &new_count);
-
-        // Keep the contract instance (and its storage) alive.
-        env.storage().instance().extend_ttl(BUMP_THRESHOLD, BUMP_TO);
-
-        new_count
+            .extend_ttl(30 * 17280, 120 * 17280);
+        count
     }
 
-    /// Returns the current counter value without modifying it.
     pub fn get(env: Env) -> u32 {
         env.storage()
             .instance()
-            .get(&symbol_short!("COUNT"))
+            .get(&symbol_short!("count"))
             .unwrap_or(0)
     }
 }

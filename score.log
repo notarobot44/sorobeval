@@ -1,0 +1,234 @@
+01-counter claude-fable-5.1 bare #0: PASS
+01-counter claude-fable-5.1 bare #1: PASS
+01-counter claude-fable-5.1 bare #2: PASS
+01-counter claude-fable-5.1 skill #0: PASS
+01-counter claude-fable-5.1 skill #1: PASS
+01-counter claude-fable-5.1 skill #2: PASS
+01-counter glm-5.3-flash bare #0: PASS
+01-counter glm-5.3-flash bare #1: PASS
+01-counter glm-5.3-flash bare #2: PASS
+01-counter glm-5.3-flash skill #0: PASS
+01-counter glm-5.3-flash skill #1: PASS
+01-counter glm-5.3-flash skill #2: PASS
+01-counter gpt-6.1-sol bare #0: PASS
+01-counter gpt-6.1-sol bare #1: PASS
+01-counter gpt-6.1-sol bare #2: PASS
+01-counter gpt-6.1-sol skill #0: PASS
+01-counter gpt-6.1-sol skill #1: PASS
+01-counter gpt-6.1-sol skill #2: PASS
+01-counter kimi-k3 bare #0: PASS
+01-counter kimi-k3 bare #1: PASS
+01-counter kimi-k3 bare #2: PASS
+01-counter kimi-k3 skill #0: PASS
+01-counter kimi-k3 skill #1: PASS
+01-counter kimi-k3 skill #2: PASS
+01-counter muse-spark-1.3 bare #0: PASS
+01-counter muse-spark-1.3 bare #1: PASS
+01-counter muse-spark-1.3 bare #2: PASS
+01-counter muse-spark-1.3 skill #0: PASS
+01-counter muse-spark-1.3 skill #1: PASS
+01-counter muse-spark-1.3 skill #2: PASS
+02-kv-store claude-fable-5.1 bare #0: PASS
+02-kv-store claude-fable-5.1 bare #1: PASS
+02-kv-store claude-fable-5.1 bare #2: PASS
+02-kv-store claude-fable-5.1 skill #0: PASS
+02-kv-store claude-fable-5.1 skill #1: PASS
+02-kv-store claude-fable-5.1 skill #2: PASS
+02-kv-store glm-5.3-flash bare #0: PASS
+02-kv-store glm-5.3-flash bare #1: PASS
+02-kv-store glm-5.3-flash bare #2: PASS
+02-kv-store glm-5.3-flash skill #0: PASS
+02-kv-store glm-5.3-flash skill #1: PASS
+02-kv-store glm-5.3-flash skill #2: PASS
+02-kv-store gpt-6.1-sol bare #0: PASS
+02-kv-store gpt-6.1-sol bare #1: PASS
+02-kv-store gpt-6.1-sol bare #2: PASS
+02-kv-store gpt-6.1-sol skill #0: PASS
+02-kv-store gpt-6.1-sol skill #1: PASS
+02-kv-store gpt-6.1-sol skill #2: PASS
+02-kv-store kimi-k3 bare #0: PASS
+02-kv-store kimi-k3 bare #1: PASS
+02-kv-store kimi-k3 bare #2: PASS
+02-kv-store kimi-k3 skill #0: PASS
+02-kv-store kimi-k3 skill #1: PASS
+02-kv-store kimi-k3 skill #2: PASS
+02-kv-store muse-spark-1.3 bare #0: PASS
+02-kv-store muse-spark-1.3 bare #1: PASS
+02-kv-store muse-spark-1.3 bare #2: PASS
+02-kv-store muse-spark-1.3 skill #0: PASS
+02-kv-store muse-spark-1.3 skill #1: PASS
+02-kv-store muse-spark-1.3 skill #2: PASS
+03-hello claude-fable-5.1 bare #0: PASS
+03-hello claude-fable-5.1 bare #1: PASS
+03-hello claude-fable-5.1 bare #2: PASS
+03-hello claude-fable-5.1 skill #0: PASS
+03-hello claude-fable-5.1 skill #1: PASS
+03-hello claude-fable-5.1 skill #2: PASS
+03-hello glm-5.3-flash bare #0: PASS
+03-hello glm-5.3-flash bare #1: PASS
+03-hello glm-5.3-flash bare #2: fail {'build': False, 'tests': False, 'budget': False}
+03-hello glm-5.3-flash skill #0: PASS
+03-hello glm-5.3-flash skill #1: fail {'build': False, 'tests': False, 'budget': False}
+03-hello glm-5.3-flash skill #2: PASS
+03-hello gpt-6.1-sol bare #0: PASS
+03-hello gpt-6.1-sol bare #1: PASS
+03-hello gpt-6.1-sol bare #2: PASS
+03-hello gpt-6.1-sol skill #0: PASS
+03-hello gpt-6.1-sol skill #1: PASS
+03-hello gpt-6.1-sol skill #2: PASS
+03-hello kimi-k3 bare #0: PASS
+03-hello kimi-k3 bare #1: PASS
+03-hello kimi-k3 bare #2: PASS
+03-hello kimi-k3 skill #0: PASS
+03-hello kimi-k3 skill #1: PASS
+03-hello kimi-k3 skill #2: PASS
+03-hello muse-spark-1.3 bare #0: PASS
+03-hello muse-spark-1.3 bare #1: PASS
+03-hello muse-spark-1.3 bare #2: PASS
+03-hello muse-spark-1.3 skill #0: PASS
+03-hello muse-spark-1.3 skill #1: PASS
+03-hello muse-spark-1.3 skill #2: PASS
+04-persistent-ttl claude-fable-5.1 bare #0: PASS
+04-persistent-ttl claude-fable-5.1 bare #1: PASS
+04-persistent-ttl claude-fable-5.1 bare #2: PASS
+04-persistent-ttl claude-fable-5.1 skill #0: PASS
+04-persistent-ttl claude-fable-5.1 skill #1: PASS
+04-persistent-ttl claude-fable-5.1 skill #2: PASS
+04-persistent-ttl glm-5.3-flash bare #0: fail {'build': True, 'tests': False, 'budget': True}
+04-persistent-ttl glm-5.3-flash bare #1: PASS
+04-persistent-ttl glm-5.3-flash bare #2: fail {'build': True, 'tests': False, 'budget': True}
+04-persistent-ttl glm-5.3-flash skill #0: fail {'build': False, 'tests': False, 'budget': False}
+04-persistent-ttl glm-5.3-flash skill #1: fail {'build': False, 'tests': False, 'budget': False}
+04-persistent-ttl glm-5.3-flash skill #2: fail {'build': True, 'tests': False, 'budget': False}
+04-persistent-ttl gpt-6.1-sol bare #0: PASS
+04-persistent-ttl gpt-6.1-sol bare #1: PASS
+04-persistent-ttl gpt-6.1-sol bare #2: PASS
+04-persistent-ttl gpt-6.1-sol skill #0: PASS
+04-persistent-ttl gpt-6.1-sol skill #1: PASS
+04-persistent-ttl gpt-6.1-sol skill #2: PASS
+04-persistent-ttl kimi-k3 bare #0: PASS
+04-persistent-ttl kimi-k3 bare #1: PASS
+04-persistent-ttl kimi-k3 bare #2: PASS
+04-persistent-ttl kimi-k3 skill #0: PASS
+04-persistent-ttl kimi-k3 skill #1: PASS
+04-persistent-ttl kimi-k3 skill #2: PASS
+04-persistent-ttl muse-spark-1.3 bare #0: PASS
+04-persistent-ttl muse-spark-1.3 bare #1: PASS
+04-persistent-ttl muse-spark-1.3 bare #2: PASS
+04-persistent-ttl muse-spark-1.3 skill #0: PASS
+04-persistent-ttl muse-spark-1.3 skill #1: PASS
+04-persistent-ttl muse-spark-1.3 skill #2: PASS
+05-admin-gated claude-fable-5.1 bare #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated claude-fable-5.1 bare #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated claude-fable-5.1 bare #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated claude-fable-5.1 skill #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated claude-fable-5.1 skill #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated claude-fable-5.1 skill #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated glm-5.3-flash bare #0: fail {'build': True, 'tests': False, 'budget': True}
+05-admin-gated glm-5.3-flash bare #1: fail {'build': True, 'tests': False, 'budget': True}
+05-admin-gated glm-5.3-flash bare #2: fail {'build': True, 'tests': False, 'budget': True}
+05-admin-gated glm-5.3-flash skill #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated glm-5.3-flash skill #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated glm-5.3-flash skill #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol bare #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol bare #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol bare #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol skill #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol skill #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated gpt-6.1-sol skill #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated kimi-k3 bare #0: PASS
+05-admin-gated kimi-k3 bare #1: PASS
+05-admin-gated kimi-k3 bare #2: PASS
+05-admin-gated kimi-k3 skill #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated kimi-k3 skill #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated kimi-k3 skill #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated muse-spark-1.3 bare #0: PASS
+05-admin-gated muse-spark-1.3 bare #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated muse-spark-1.3 bare #2: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated muse-spark-1.3 skill #0: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated muse-spark-1.3 skill #1: fail {'build': True, 'tests': True, 'budget': False}
+05-admin-gated muse-spark-1.3 skill #2: fail {'build': True, 'tests': True, 'budget': False}
+06-events claude-fable-5.1 bare #0: PASS
+06-events claude-fable-5.1 bare #1: PASS
+06-events claude-fable-5.1 bare #2: PASS
+06-events claude-fable-5.1 skill #0: PASS
+06-events claude-fable-5.1 skill #1: PASS
+06-events claude-fable-5.1 skill #2: PASS
+06-events glm-5.3-flash bare #0: fail {'build': False, 'tests': False, 'budget': False}
+06-events glm-5.3-flash bare #1: PASS
+06-events glm-5.3-flash bare #2: fail {'build': False, 'tests': False, 'budget': False}
+06-events glm-5.3-flash skill #0: fail {'build': False, 'tests': False, 'budget': False}
+06-events glm-5.3-flash skill #1: PASS
+06-events glm-5.3-flash skill #2: fail {'build': True, 'tests': False, 'budget': False}
+06-events gpt-6.1-sol bare #0: PASS
+06-events gpt-6.1-sol bare #1: PASS
+06-events gpt-6.1-sol bare #2: PASS
+06-events gpt-6.1-sol skill #0: PASS
+06-events gpt-6.1-sol skill #1: PASS
+06-events gpt-6.1-sol skill #2: PASS
+06-events kimi-k3 bare #0: PASS
+06-events kimi-k3 bare #1: PASS
+06-events kimi-k3 bare #2: PASS
+06-events kimi-k3 skill #0: PASS
+06-events kimi-k3 skill #1: PASS
+06-events kimi-k3 skill #2: PASS
+06-events muse-spark-1.3 bare #0: PASS
+06-events muse-spark-1.3 bare #1: PASS
+06-events muse-spark-1.3 bare #2: PASS
+06-events muse-spark-1.3 skill #0: PASS
+06-events muse-spark-1.3 skill #1: PASS
+06-events muse-spark-1.3 skill #2: PASS
+07-token-pay claude-fable-5.1 bare #0: fail {'build': False, 'tests': False, 'budget': False}
+07-token-pay claude-fable-5.1 bare #1: fail {'build': False, 'tests': False, 'budget': False}
+07-token-pay claude-fable-5.1 bare #2: fail {'build': False, 'tests': False, 'budget': False}
+07-token-pay claude-fable-5.1 skill #0: PASS
+07-token-pay claude-fable-5.1 skill #1: PASS
+07-token-pay claude-fable-5.1 skill #2: PASS
+07-token-pay glm-5.3-flash bare #0: fail {'build': False, 'tests': False, 'budget': False}
+07-token-pay glm-5.3-flash bare #1: fail {'build': False, 'tests': False, 'budget': False}
+07-token-pay glm-5.3-flash bare #2: fail {'build': True, 'tests': False, 'budget': True}
+07-token-pay glm-5.3-flash skill #0: PASS
+07-token-pay glm-5.3-flash skill #1: PASS
+07-token-pay glm-5.3-flash skill #2: PASS
+07-token-pay kimi-k3 bare #0: PASS
+07-token-pay kimi-k3 bare #1: PASS
+07-token-pay kimi-k3 bare #2: PASS
+07-token-pay kimi-k3 skill #0: PASS
+07-token-pay kimi-k3 skill #1: PASS
+07-token-pay kimi-k3 skill #2: PASS
+07-token-pay muse-spark-1.3 bare #0: PASS
+07-token-pay muse-spark-1.3 bare #1: PASS
+07-token-pay muse-spark-1.3 bare #2: PASS
+07-token-pay muse-spark-1.3 skill #0: PASS
+07-token-pay muse-spark-1.3 skill #1: PASS
+07-token-pay muse-spark-1.3 skill #2: PASS
+08-spending-cap claude-fable-5.1 bare #0: PASS
+08-spending-cap claude-fable-5.1 bare #1: PASS
+08-spending-cap claude-fable-5.1 bare #2: PASS
+08-spending-cap claude-fable-5.1 skill #0: PASS
+08-spending-cap claude-fable-5.1 skill #1: PASS
+08-spending-cap claude-fable-5.1 skill #2: PASS
+08-spending-cap glm-5.3-flash bare #0: fail {'build': False, 'tests': False, 'budget': False}
+08-spending-cap glm-5.3-flash bare #1: fail {'build': False, 'tests': False, 'budget': False}
+08-spending-cap glm-5.3-flash bare #2: fail {'build': False, 'tests': False, 'budget': False}
+08-spending-cap glm-5.3-flash skill #0: fail {'build': False, 'tests': False, 'budget': False}
+08-spending-cap glm-5.3-flash skill #1: PASS
+08-spending-cap glm-5.3-flash skill #2: PASS
+08-spending-cap gpt-6.1-sol bare #0: PASS
+08-spending-cap gpt-6.1-sol bare #1: PASS
+08-spending-cap gpt-6.1-sol bare #2: PASS
+08-spending-cap gpt-6.1-sol skill #0: PASS
+08-spending-cap gpt-6.1-sol skill #1: PASS
+08-spending-cap gpt-6.1-sol skill #2: PASS
+08-spending-cap kimi-k3 bare #0: PASS
+08-spending-cap kimi-k3 bare #1: PASS
+08-spending-cap kimi-k3 bare #2: fail {'build': False, 'tests': False, 'budget': False}
+08-spending-cap kimi-k3 skill #0: PASS
+08-spending-cap kimi-k3 skill #1: PASS
+08-spending-cap kimi-k3 skill #2: PASS
+08-spending-cap muse-spark-1.3 bare #0: PASS
+08-spending-cap muse-spark-1.3 bare #1: PASS
+08-spending-cap muse-spark-1.3 bare #2: PASS
+08-spending-cap muse-spark-1.3 skill #0: PASS
+08-spending-cap muse-spark-1.3 skill #1: PASS
+08-spending-cap muse-spark-1.3 skill #2: PASS

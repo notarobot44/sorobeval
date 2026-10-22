@@ -13,18 +13,12 @@ pub struct Payer;
 
 #[contractimpl]
 impl Payer {
-    pub fn pay(
-        env: Env,
-        from: Address,
-        to: Address,
-        token: Address,
-        amount: i128,
-    ) -> Result<(), Error> {
+    pub fn pay(env: Env, from: Address, to: Address, token: Address, amount: i128) -> Result<(), Error> {
+        from.require_auth();
+
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-
-        from.require_auth();
 
         let token_client = TokenClient::new(&env, &token);
         token_client.transfer(&from, &to, &amount);

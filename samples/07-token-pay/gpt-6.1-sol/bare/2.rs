@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracterror, contractimpl, token, Address, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, token::Client, Address, Env};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -27,8 +27,7 @@ impl Payer {
             return Err(Error::InvalidAmount);
         }
 
-        token::Client::new(&env, &token).transfer(&from, &to, &amount);
-
+        Client::new(&env, &token).transfer(&from, &to, &amount);
         Ok(())
     }
 }

@@ -41,6 +41,9 @@ impl Gated {
     }
 
     pub fn value(env: Env) -> u32 {
-        env.storage().instance().get(&DataKey::Value).unwrap_or(0)
+        env.storage()
+            .instance()
+            .get(&DataKey::Value)
+            .unwrap_or(0)
     }
 }

@@ -8,6 +8,9 @@ pub struct Hello;
 #[contractimpl]
 impl Hello {
     pub fn hello(env: Env, to: Symbol) -> Vec<Symbol> {
-        Vec::from_array(&env, [symbol_short!("Hello"), to])
+        let mut vec = Vec::new(&env);
+        vec.push_back(symbol_short!("Hello"));
+        vec.push_back(to);
+        vec
     }
 }

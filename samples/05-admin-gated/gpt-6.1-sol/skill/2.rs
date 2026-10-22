@@ -1,8 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, Address, Env,
-};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -46,9 +44,6 @@ impl Gated {
     }
 
     pub fn value(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&DataKey::Value)
-            .unwrap_or(0)
+        env.storage().instance().get(&DataKey::Value).unwrap_or(0)
     }
 }

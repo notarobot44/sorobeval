@@ -1,8 +1,13 @@
 #![no_std]
-use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env};
+use soroban_sdk::{contract, contractevent, contractimpl, symbol_short, Env, Symbol};
 
-/// Emitted once per successful `record` call.
-/// Topics: ("record", count) — data payload: { value }.
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    Last,
+    Count,
+}
+
 #[contractevent]
 pub struct Record {
     #[topic]
@@ -13,28 +18,22 @@ pub struct Record {
 #[contract]
 pub struct Recorder;
 
+const KEY_LAST: Symbol = symbol_short!("last");
+const KEY_COUNT: Symbol = symbol_short!("count");
+
 #[contractimpl]
 impl Recorder {
-    /// Stores `value` in instance storage, publishes a `Record` event,
-    /// and returns the total number of records so far (1 for the first call).
     pub fn record(env: Env, value: u32) -> u32 {
-        let count: u32 = env
-            .storage()
-            .instance()
-            .get(&symbol_short!("count"))
-            .unwrap_or(0)
-            + 1;
-
-        env.storage().instance().set(&symbol_short!("last"), &value);
-        env.storage().instance().set(&symbol_short!("count"), &count);
+        let count: u32 = env.storage().instance().get(&DataKey::Count).unwrap_or(0) + 1;
+        env.storage().instance().set(&DataKey::Count, &count);
+        env.storage().instance().set(&DataKey::Last, &value);
+        env.storage().instance().extend_ttl(120 * 17280, 180 * 17280);
 
         Record { count, value }.publish(&env);
-
         count
     }
 
-    /// The most recently recorded value, or `None` if nothing has been recorded.
     pub fn last(env: Env) -> Option<u32> {
-        env.storage().instance().get(&symbol_short!("last"))
+        env.storage().instance().get(&DataKey::Last)
     }
 }

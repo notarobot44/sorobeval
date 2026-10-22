@@ -1,13 +1,5 @@
 #![no_std]
-
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
-
-#[contracttype]
-#[derive(Clone)]
-pub enum DataKey {
-    Admin,
-    Value,
-}
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -15,6 +7,13 @@ pub enum DataKey {
 pub enum Error {
     AlreadyInitialized = 1,
     NotInitialized = 2,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    Admin,
+    Value,
 }
 
 #[contract]
@@ -36,9 +35,7 @@ impl Gated {
             .instance()
             .get(&DataKey::Admin)
             .ok_or(Error::NotInitialized)?;
-
         admin.require_auth();
-
         env.storage().instance().set(&DataKey::Value, &value);
         Ok(())
     }
