@@ -1,5 +1,7 @@
 # SorobEval
 
+> **Note (24 Oct 2026):** the v0 results in this repository were produced on soroban-sdk 27 (stellar-cli 28.1.0, Rust 1.93) and are dated. A full rerun on soroban-sdk 29 is in progress on branch `sdk-29`.
+
 A reproducible benchmark for AI-generated Soroban smart contracts.
 Eight tasks, mechanical gates (build, tests), two context conditions (with and without SDF's official stellar-dev-skill), any OpenAI-compatible model.
 Independent project by Sorobai LLC; not affiliated with the Stellar Development Foundation.
