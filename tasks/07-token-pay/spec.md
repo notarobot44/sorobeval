@@ -1,6 +1,6 @@
 # Task 07 — Cross-contract token transfer
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Payer`. Function:
 - `pay(env: Env, from: Address, to: Address, token: Address, amount: i128)

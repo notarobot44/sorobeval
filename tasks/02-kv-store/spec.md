@@ -1,6 +1,6 @@
 # Task 02 — Key-value store (instance storage)
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Store`. Functions:
 - `set(env: Env, key: Symbol, value: i128)` — stores the value under the key.

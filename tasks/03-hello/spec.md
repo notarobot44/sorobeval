@@ -1,6 +1,6 @@
 # Task 03 — Hello with host types
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Hello`. Function:
 - `hello(env: Env, to: Symbol) -> Vec<Symbol>` — returns a two-element vector:

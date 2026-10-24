@@ -9,10 +9,10 @@ crate-type = ["cdylib"]
 doctest = false
 
 [dependencies]
-soroban-sdk = "27"
+soroban-sdk = "29"
 
 [dev-dependencies]
-soroban-sdk = { version = "27", features = ["testutils"] }
+soroban-sdk = { version = "29", features = ["testutils"] }
 
 [profile.release]
 opt-level = "z"

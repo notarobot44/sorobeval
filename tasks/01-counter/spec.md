@@ -1,7 +1,7 @@
 # Task 01 — Counter
 
 Write a Soroban smart contract in Rust, in a single file `lib.rs`, using
-`soroban-sdk` 27.
+`soroban-sdk` 29.
 
 The contract exposes two functions:
 

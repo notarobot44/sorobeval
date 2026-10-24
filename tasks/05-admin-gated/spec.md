@@ -1,6 +1,6 @@
 # Task 05 — Admin-gated setter
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Gated`. Functions:
 - `init(env: Env, admin: Address) -> Result<(), Error>` — stores the admin.

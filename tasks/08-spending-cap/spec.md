@@ -1,6 +1,6 @@
 # Task 08 — Spending-cap treasury (security invariants)
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Treasury`. The treasury holds a token balance (sent to the
 contract address by anyone) and lets an admin pay whitelisted recipients,

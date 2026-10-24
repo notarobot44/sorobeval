@@ -1,6 +1,6 @@
 # Task 04 — Persistent storage with TTL extension
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Persist`. Functions:
 - `put(env: Env, key: u32, value: Bytes)` — stores `value` under `key` in

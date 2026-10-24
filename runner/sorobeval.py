@@ -64,10 +64,13 @@ def score(task_dir: Path, lib_path: Path, source: str):
         lib += "\n#[cfg(test)]\nmod test;\n"
     (src / "lib.rs").write_text(lib)
     shutil.copy(task_dir / "tests" / "test.rs", src / "test.rs")
+    cfg = work / ".cargo"
+    cfg.mkdir()
+    (cfg / "config.toml").write_text("[net]\noffline = true\n")
 
     # 2. Gate: build to wasm (offline — the sandbox has a warmed registry).
     build_ok, build_log = run(
-        ["cargo", "build", "--release", "--offline", "--target", TARGET], work)
+        ["stellar", "contract", "build"], work)
 
     # 3. Gate: tests (native, testutils feature).
     tests_ok, test_log = (run(["cargo", "test", "--release", "--offline"], work)
@@ -89,6 +92,7 @@ def score(task_dir: Path, lib_path: Path, source: str):
         "build_log_tail": tail(build_log),
         "test_log_tail": tail(test_log),
         "toolchain": {"rustc": version("rustc"), "cargo": version("cargo"),
+                      "stellar": version("stellar"),
                       "target": TARGET},
     }
     shutil.rmtree(work, ignore_errors=True)

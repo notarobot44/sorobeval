@@ -1,6 +1,6 @@
 # Task 06 — Events on state change
 
-Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 27.
+Write a Soroban smart contract in Rust, single file `lib.rs`, `soroban-sdk` 29.
 
 Contract struct: `Recorder`. Functions:
 - `record(env: Env, value: u32) -> u32` — stores `value` in instance storage

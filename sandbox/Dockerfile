@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 \
 # never needs the network.
 WORKDIR /warm
 COPY tasks/01-counter/reference/ /warm/
-RUN cargo fetch && cargo build --release --target ${SOROBAN_WASM_TARGET} \
+RUN cargo fetch && stellar contract build \
  && cargo test --release && rm -rf /warm/target
 
 WORKDIR /work
