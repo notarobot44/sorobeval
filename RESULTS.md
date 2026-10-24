@@ -1,5 +1,19 @@
 # SorobEval v0 — results
 
+## SDK 29 rerun (24–25 Oct 2026)
+
+Same eight tasks, same scorer, toolchain moved from soroban-sdk 27 to 29.0.1 (stellar-cli 28.1.0, Rust 1.93; builds now via `stellar contract build`, which SDK 28+ requires), skill condition = stellar-dev-skill `main` at e20f352 (21 Oct, PR #143 merged). No cell fell by more than one sample. GPT-6.1-sol/skill rose from 71% to 100%: the task-7 failures reported in v0 were fixed upstream and the fix verified across an SDK major. Claude's three bare failures remain the provider's content filter on task 7. The skill's effect is now confined to the smallest model (GLM 33% → 75%); the frontier rows pass v0's tasks with or without it. Cost of the rerun: one afternoon, one toolchain change, $8.40 of API credit, one laptop overnight. Local rows (qwen3-coder-30b, gpt-oss-20b, devstral-small-2) to follow.
+
+| cell | v0 (sdk 27) | sdk 29 |
+|---|---|---|
+| claude-fable-5.1 skill / bare | 100 / 88 | 100 / 88 |
+| gpt-6.1-sol skill / bare | 71 / 100 | 100 / 100 |
+| kimi-k3 skill / bare | 92 / 96 | 100 / 92 |
+| muse-spark-1.3 skill / bare | 96 / 88 | 100 / 100 |
+| glm-5.3-flash skill / bare | 71 / – | 75 / 33 |
+| truncated samples, all rows | 9 | 0 |
+
+
 Run: 29–30 September 2026 · 8 tasks · 5 models · 2 conditions · 3 samples per cell · 240 samples.
 Toolchain (pinned, in `sandbox/Dockerfile`): rustc 1.93.1, soroban-sdk 27.0.6, stellar-cli 28.1.0, target `wasm32v1-none`.
 Model ids as listed by OpenRouter on 29 Sep 2026; default settings, temperature 0.2, `max_tokens` 16000.
